@@ -1,0 +1,129 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "Topolab API", "version": "1.0.0", "description": "Public dataset and OGC API - Features surface wrapped by the Topolab SDKs." },
+  "servers": [
+    { "url": "https://api.topolab.nl", "description": "Production" },
+    { "url": "https://api-staging.topolab.nl", "description": "Staging" }
+  ],
+  "security": [{ "ApiKey": [] }],
+  "components": {
+    "securitySchemes": { "ApiKey": { "type": "apiKey", "in": "header", "name": "X-API-Key" } },
+    "schemas": {
+      "PageMeta": {
+        "type": "object",
+        "required": ["currentPage","itemsPerPage","totalItems","totalPages","hasPreviousPage","hasNextPage"],
+        "properties": {
+          "currentPage": {"type":"integer"}, "itemsPerPage": {"type":"integer"},
+          "totalItems": {"type":"integer"}, "totalPages": {"type":"integer"},
+          "hasPreviousPage": {"type":"boolean"}, "hasNextPage": {"type":"boolean"}
+        }
+      },
+      "DatasetSummary": {
+        "type": "object",
+        "required": ["id","table"],
+        "properties": {
+          "id": {"type":"string","format":"uuid"},
+          "table": {"type":"string"},
+          "theme": {"type":"string"},
+          "country": {"type":"string"},
+          "metadata": {"type":"object","additionalProperties": true}
+        }
+      },
+      "DatasetList": {
+        "type":"object","required":["data","meta"],
+        "properties": { "data": {"type":"array","items":{"$ref":"#/components/schemas/DatasetSummary"}}, "meta": {"$ref":"#/components/schemas/PageMeta"} }
+      },
+      "GeoJSONFeature": {
+        "type":"object","required":["type","geometry","properties"],
+        "properties": {
+          "type": {"const":"Feature"},
+          "geometry": {"type":"object","additionalProperties": true},
+          "properties": {"type":"object","additionalProperties": true},
+          "id": {"type":["string","number"]}
+        }
+      },
+      "GeoJSONFeatureCollection": {
+        "type":"object","required":["type","features"],
+        "properties": {
+          "type": {"const":"FeatureCollection"},
+          "features": {"type":"array","items":{"$ref":"#/components/schemas/GeoJSONFeature"}},
+          "numberReturned": {"type":"integer"},
+          "numberMatched": {"type":"integer"}
+        }
+      },
+      "ApiError": {
+        "type":"object","required":["statusCode","message"],
+        "properties": { "statusCode":{"type":"integer"}, "message":{"type":"string"}, "error":{"type":"string"}, "retryAfter":{"type":"integer"}, "details":{"type":"object","additionalProperties": true} }
+      }
+    }
+  },
+  "paths": {
+    "/v1/dataset/all": {
+      "get": {
+        "operationId": "listDatasets", "security": [],
+        "parameters": [
+          {"name":"page","in":"query","schema":{"type":"integer"}},
+          {"name":"limit","in":"query","schema":{"type":"integer"}},
+          {"name":"search","in":"query","schema":{"type":"string"}},
+          {"name":"theme","in":"query","schema":{"type":"string"}},
+          {"name":"country","in":"query","schema":{"type":"string"}},
+          {"name":"sortBy","in":"query","schema":{"type":"string"}},
+          {"name":"sortOrder","in":"query","schema":{"type":"string","enum":["ASC","DESC"]}}
+        ],
+        "responses": {"200":{"description":"ok","content":{"application/json":{"schema":{"$ref":"#/components/schemas/DatasetList"}}}}}
+      }
+    },
+    "/v1/dataset/{table}": {
+      "get": {
+        "operationId": "getDataset", "security": [],
+        "parameters": [
+          {"name":"table","in":"path","required":true,"schema":{"type":"string"}},
+          {"name":"locale","in":"query","schema":{"type":"string","enum":["en","nl"]}}
+        ],
+        "responses": {"200":{"description":"ok","content":{"application/json":{"schema":{"$ref":"#/components/schemas/DatasetSummary"}}}},"404":{"description":"not found","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ApiError"}}}}}
+      }
+    },
+    "/v1/dataset/{table}/sample/{format}": {
+      "get": {
+        "operationId": "getDatasetSample", "security": [],
+        "parameters": [
+          {"name":"table","in":"path","required":true,"schema":{"type":"string"}},
+          {"name":"format","in":"path","required":true,"schema":{"type":"string","enum":["csv","json","geojson","kml"]}}
+        ],
+        "responses": {"200":{"description":"ok"}}
+      }
+    },
+    "/v1/dataset/{table}/files/{format}": {
+      "get": {
+        "operationId": "downloadDatasetFile",
+        "parameters": [
+          {"name":"table","in":"path","required":true,"schema":{"type":"string"}},
+          {"name":"format","in":"path","required":true,"schema":{"type":"string","enum":["csv","json","geojson","kml","shp"]}}
+        ],
+        "responses": {
+          "200":{"description":"file stream","content":{"application/geo+json":{"schema":{"$ref":"#/components/schemas/GeoJSONFeatureCollection"}},"application/octet-stream":{"schema":{"type":"string","format":"binary"}}}},
+          "402":{"description":"insufficient credits","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ApiError"}}}},
+          "403":{"description":"addon required or access denied","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ApiError"}}}}
+        }
+      }
+    },
+    "/v1/ogc/collections/{collectionId}/items": {
+      "get": {
+        "operationId": "getOgcItems",
+        "parameters": [
+          {"name":"collectionId","in":"path","required":true,"schema":{"type":"string"}},
+          {"name":"bbox","in":"query","schema":{"type":"string"},"description":"minLon,minLat,maxLon,maxLat"},
+          {"name":"limit","in":"query","schema":{"type":"integer","minimum":1,"maximum":1000,"default":100}},
+          {"name":"offset","in":"query","schema":{"type":"integer"}},
+          {"name":"category","in":"query","schema":{"type":"string"}},
+          {"name":"city","in":"query","schema":{"type":"string"}},
+          {"name":"country","in":"query","schema":{"type":"string"}}
+        ],
+        "responses": {
+          "200":{"description":"feature collection","content":{"application/geo+json":{"schema":{"$ref":"#/components/schemas/GeoJSONFeatureCollection"}}}},
+          "403":{"description":"GIS_ACCESS required","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ApiError"}}}}
+        }
+      }
+    }
+  }
+}
