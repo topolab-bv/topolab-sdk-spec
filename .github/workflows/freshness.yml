@@ -1,0 +1,21 @@
+name: spec-freshness
+on:
+  schedule: [{ cron: "0 6 * * 1" }]
+  workflow_dispatch:
+jobs:
+  diff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pull live spec from staging
+        env: { ENGINE_URL: https://api-staging.topolab.nl }
+        run: ./scripts/sync-spec.sh
+      - name: Fail if curated subset is missing endpoints present live
+        run: |
+          node -e '
+            const live = require("./openapi.live.json");
+            const ours = require("./openapi.json");
+            const missing = Object.keys(ours.paths).filter(p => !live.paths || !live.paths[p]);
+            if (missing.length) { console.error("Endpoints we wrap no longer exist live:", missing); process.exit(1); }
+            console.log("All wrapped endpoints still present live.");
+          '

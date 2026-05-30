@@ -1,0 +1,38 @@
+# Canonical SDK surface. Each SDK's naming-lint asserts it exposes these.
+version: 1
+client:
+  constructors: [Client, AsyncClient]   # R: tl_client
+  options: [api_key, base_url, timeout, max_retries, proxy_url, user_agent]
+  env_var: TOPOLAB_API_KEY
+  default_base_url: https://api.topolab.nl
+methods:
+  - name: dataset            # handle factory; R: tl_dataset
+    params: [slug]
+  - name: datasets.list      # R: tl_datasets
+    params: [page, limit, search, theme, country, sort_by, sort_order]
+  - name: metadata           # R: tl_metadata
+    params: [locale]
+  - name: sample             # R: tl_sample
+    params: [format]
+  - name: to_geojson         # TS: toGeoJSON ; R: tl_geojson
+    params: []
+  - name: download           # R: tl_download
+    params: [path, format]
+  - name: to_geodataframe    # Python [geo] ; R: as_sf ; TS: n/a
+    params: []
+  - name: items              # R: tl_items
+    params: [bbox, limit, offset, category, city, country]
+  - name: iter_items         # TS: iterItems ; R: tl_items_all
+    params: [page_size, total_limit, bbox, category, city, country]
+errors:
+  - {name: TopolabError,             base: true}
+  - {name: AuthenticationError,      status: 401}
+  - {name: AddonRequiredError,       status: 403, when: "addon missing"}
+  - {name: AccessDeniedError,        status: 403, when: "unknown/unauthorized dataset on data route"}
+  - {name: InsufficientCreditsError, status: 402}
+  - {name: NotFoundError,            status: 404}
+  - {name: ConfigurationError,       status: 400, when: "non-org key on OGC"}
+  - {name: RateLimitError,           status: 429}
+  - {name: ValidationError,          status: 4xx}
+  - {name: ServerError,              status: 5xx}
+  - {name: ConnectionError,          status: network}

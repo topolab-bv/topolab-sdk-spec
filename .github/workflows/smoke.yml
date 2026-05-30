@@ -1,0 +1,27 @@
+name: live-smoke
+on:
+  schedule: [{ cron: "0 3 * * *" }]
+  workflow_dispatch:
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Install Python SDK from sibling repo
+        run: pip install "git+https://github.com/topolab/topolab-python.git"
+      - name: Hit critical endpoints
+        env:
+          TOPOLAB_API_KEY: ${{ secrets.STAGING_API_KEY }}
+          TOPOLAB_BASE_URL: https://api-staging.topolab.nl
+        run: |
+          python - <<'PY'
+          import os
+          from topolab import Client
+          tl = Client(api_key=os.environ["TOPOLAB_API_KEY"], base_url=os.environ["TOPOLAB_BASE_URL"])
+          assert tl.datasets.list(limit=1).meta.itemsPerPage >= 0
+          md = tl.dataset("nl-domino-poi").metadata()
+          assert md.id, "metadata id missing"
+          print("smoke ok")
+          PY
