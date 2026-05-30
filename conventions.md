@@ -6,9 +6,36 @@ form is [`conventions.yaml`](conventions.yaml); each SDK lints against it.
 ## Construction
 
 API key from an explicit argument or the `TOPOLAB_API_KEY` environment variable.
-`base_url` defaults to `https://api.topolab.nl` (override for staging via arg or
-`TOPOLAB_BASE_URL`). Auth is the `X-API-Key` header (`tlb_{env}_...`). **Data
-routes require an organization-scoped key.**
+Auth is the `X-API-Key` header (`tlb_{env}_...`). **Data routes require an
+organization-scoped key.**
+
+### Environments
+
+The SDKs ship pointing at **production** (`https://api.topolab.nl`). Select
+staging with the `environment` option (`"production"` | `"staging"`); an explicit
+`base_url` overrides it (self-hosting / tests). Resolution precedence,
+most-specific first:
+
+1. `base_url` argument
+2. `environment` argument
+3. `TOPOLAB_BASE_URL` env var
+4. `TOPOLAB_ENV` env var (`production` | `staging`)
+5. production default
+
+| Environment | Base URL |
+|---|---|
+| `production` (default) | `https://api.topolab.nl` |
+| `staging` | `https://api-staging.topolab.nl` |
+
+```python
+Client(api_key="…", environment="staging")          # Python
+```
+```ts
+new Client({ apiKey: "…", environment: "staging" })  // TypeScript
+```
+```r
+tl_client(api_key = "…", environment = "staging")    # R
+```
 
 ## Methods
 

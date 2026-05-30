@@ -2,9 +2,16 @@
 version: 1
 client:
   constructors: [Client, AsyncClient]   # R: tl_client
-  options: [api_key, base_url, timeout, max_retries, proxy_url, user_agent]
-  env_var: TOPOLAB_API_KEY
+  options: [api_key, base_url, environment, timeout, max_retries, proxy_url, user_agent]
+  env_vars: [TOPOLAB_API_KEY, TOPOLAB_BASE_URL, TOPOLAB_ENV]
+  env_var: TOPOLAB_API_KEY   # (kept for back-compat; see env_vars)
   default_base_url: https://api.topolab.nl
+  # Named API environments. Production ships as the default.
+  environments:
+    production: https://api.topolab.nl
+    staging: https://api-staging.topolab.nl
+  # base_url resolution precedence (most specific first):
+  base_url_precedence: [base_url, environment, TOPOLAB_BASE_URL, TOPOLAB_ENV, default_base_url]
 methods:
   - name: dataset            # handle factory; R: tl_dataset
     params: [slug]

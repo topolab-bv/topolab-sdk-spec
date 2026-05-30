@@ -1,6 +1,7 @@
 name: spec-freshness
 on:
-  schedule: [{ cron: "0 6 * * 1" }]
+  schedule:
+    - cron: "0 6 * * 1"
   workflow_dispatch:
 jobs:
   diff:
@@ -8,7 +9,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Pull live spec from staging
-        env: { ENGINE_URL: https://api-staging.topolab.nl }
+        env:
+          ENGINE_URL: https://api-staging.topolab.nl
         run: ./scripts/sync-spec.sh
       - name: Fail if curated subset is missing endpoints present live
         run: |

@@ -1,6 +1,7 @@
 name: live-smoke
 on:
-  schedule: [{ cron: "0 3 * * *" }]
+  schedule:
+    - cron: "0 3 * * *"
   workflow_dispatch:
 jobs:
   smoke:
@@ -8,7 +9,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.12" }
+        with:
+          python-version: "3.12"
       - name: Install Python SDK from sibling repo
         run: pip install "git+https://github.com/topolab-bv/topolab-python.git"
       - name: Hit critical endpoints
