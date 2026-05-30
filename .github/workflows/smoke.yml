@@ -10,7 +10,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - name: Install Python SDK from sibling repo
-        run: pip install "git+https://github.com/topolab/topolab-python.git"
+        run: pip install "git+https://github.com/topolab-bv/topolab-python.git"
       - name: Hit critical endpoints
         env:
           TOPOLAB_API_KEY: ${{ secrets.STAGING_API_KEY }}
