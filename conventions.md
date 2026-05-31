@@ -36,21 +36,24 @@ new Client({ apiKey: "…", environment: "staging" })  // TypeScript
 ```r
 tl_client(api_key = "…", environment = "staging")    # R
 ```
+```go
+topolab.New(topolab.WithAPIKey("…"), topolab.WithEnvironment("staging")) // Go
+```
 
 ## Methods
 
-| Op | Python (sync; async mirrors with `await`) | TypeScript | R |
-|---|---|---|---|
-| client | `Client(api_key=)` / `AsyncClient(api_key=)` | `new Client({apiKey})` | `tl_client(api_key=)` |
-| handle | `tl.dataset("slug")` | `tl.dataset("slug")` | `tl_dataset(tl, "slug")` |
-| catalog | `tl.datasets.list(...)` | `tl.datasets.list({...})` | `tl_datasets(tl, ...)` |
-| metadata | `ds.metadata()` | `ds.metadata()` | `tl_metadata(ds)` |
-| sample | `ds.sample(format=)` | `ds.sample({format})` | `tl_sample(ds, format=)` |
-| bulk geojson | `ds.to_geojson()` | `ds.toGeoJSON()` | `tl_geojson(ds)` |
-| download | `ds.download(path, format=)` | `download(ds, path, {format})` (`@topolab/sdk/node`) | `tl_download(ds, path, format=)` |
-| geo convert | `ds.to_geodataframe()` (`[geo]`) | — (returns typed GeoJSON) | `as_sf(ds)` |
-| spatial | `ds.items(bbox=, limit=, **filters)` | `ds.items({bbox,limit,...})` | `tl_items(ds, bbox=, ...)` |
-| paginate | `ds.iter_items(page_size=, total_limit=)` | `ds.iterItems({...})` | `tl_items_all(ds, ...)` |
+| Op | Python (sync; async mirrors with `await`) | TypeScript | R | Go |
+|---|---|---|---|---|
+| client | `Client(api_key=)` / `AsyncClient(api_key=)` | `new Client({apiKey})` | `tl_client(api_key=)` | `topolab.New(WithAPIKey(…))` |
+| handle | `tl.dataset("slug")` | `tl.dataset("slug")` | `tl_dataset(tl, "slug")` | `tl.Dataset("slug")` |
+| catalog | `tl.datasets.list(...)` | `tl.datasets.list({...})` | `tl_datasets(tl, ...)` | `tl.Datasets.List(ctx, …)` |
+| metadata | `ds.metadata()` | `ds.metadata()` | `tl_metadata(ds)` | `ds.Metadata(ctx, locale)` |
+| sample | `ds.sample(format=)` | `ds.sample({format})` | `tl_sample(ds, format=)` | `ds.Sample(ctx, format)` |
+| bulk geojson | `ds.to_geojson()` | `ds.toGeoJSON()` | `tl_geojson(ds)` | `ds.ToGeoJSON(ctx)` |
+| download | `ds.download(path, format=)` | `download(ds, path, {format})` (`@topolab/sdk/node`) | `tl_download(ds, path, format=)` | `ds.Download(ctx, path, format)` |
+| geo convert | `ds.to_geodataframe()` (`[geo]`) | — (returns typed GeoJSON) | `as_sf(ds)` | — (returns typed GeoJSON) |
+| spatial | `ds.items(bbox=, limit=, **filters)` | `ds.items({bbox,limit,...})` | `tl_items(ds, bbox=, ...)` | `ds.Items(ctx, &ItemsOptions{…})` |
+| paginate | `ds.iter_items(page_size=, total_limit=)` | `ds.iterItems({...})` | `tl_items_all(ds, ...)` | `ds.IterItems(ctx, …)` / `ds.ItemsAll(ctx, …)` |
 
 Formats — **sample:** `csv, json, geojson, kml`. **bulk:** `csv, json, geojson, kml, shp`.
 Spatial params: `bbox` `[minLon,minLat,maxLon,maxLat]` (sent as a comma string on
