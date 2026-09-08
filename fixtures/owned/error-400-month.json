@@ -1,0 +1,8 @@
+{
+  "path": "/v1/dataset/business_professional_services_autocrew/archives/julyish/csv",
+  "method": "GET",
+  "code": 400,
+  "message": "Invalid month \"julyish\". Use YYYY-MM (e.g. 2025-10), a full YYYY-MM-DD date, or \"latest\".",
+  "time": "2026-09-08T23:41:46.948Z",
+  "requestId": "20dd1c40c296014ac5d6cd8ac153d5e8"
+}

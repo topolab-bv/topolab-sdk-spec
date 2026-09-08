@@ -1,0 +1,8 @@
+{
+  "path": "/v1/sql/query",
+  "method": "POST",
+  "code": 403,
+  "message": "This endpoint requires the sql-access add-on",
+  "time": "2026-09-08T23:42:15.926Z",
+  "requestId": "e600e461a1bedacc6a48cb2bd3ffee07"
+}
