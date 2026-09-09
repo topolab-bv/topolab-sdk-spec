@@ -1,8 +1,8 @@
 {
-  "path": "/v1/dataset/business_professional_services_autocrew/archives/2026-13/csv",
-  "method": "GET",
-  "code": 404,
-  "message": "Archive file not found for 2026-13 in csv format",
-  "time": "2026-09-08T23:41:46.748Z",
-  "requestId": "a403513b12702211872bbae4977d3cc5"
+    "path": "/v1/dataset/business_professional_services_autocrew/archives/2019-01/csv",
+    "method": "GET",
+    "code": 404,
+    "message": "Archive for 2019-01 is outside your plan's retention window.",
+    "time": "2026-09-09T00:08:03.085Z",
+    "requestId": "9772f8335a3389eff8008b770f1a29f8"
 }
