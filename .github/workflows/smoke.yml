@@ -13,17 +13,40 @@ jobs:
           python-version: "3.12"
       - name: Install Python SDK from sibling repo
         run: pip install "git+https://github.com/topolab-bv/topolab-python.git"
-      - name: Hit critical endpoints
+      - name: Exercise the integration path an organization actually uses
         env:
           TOPOLAB_API_KEY: ${{ secrets.STAGING_API_KEY }}
           TOPOLAB_BASE_URL: https://api-staging.topolab.nl
         run: |
           python - <<'PY'
-          import os
+          import os, tempfile, pathlib
           from topolab import Client
+
           tl = Client(api_key=os.environ["TOPOLAB_API_KEY"], base_url=os.environ["TOPOLAB_BASE_URL"])
-          assert tl.datasets.list(limit=1).meta.itemsPerPage >= 0
-          md = tl.dataset("nl-domino-poi").metadata()
+
+          # Catalogue is anonymous but must still answer.
+          assert tl.datasets.list(limit=1).meta.itemsPerPage >= 0, "catalogue listing failed"
+
+          # Discover from the key rather than hard-coding a slug. The previous
+          # version asserted on "nl-domino-poi", which does not exist — so this
+          # job failed every night from 2026-07-26 without anyone noticing.
+          page = tl.datasets.owned(limit=1)
+          assert page.total > 0, "key owns no datasets; cannot smoke the delivery path"
+          ds = tl.dataset(page.items[0].table)
+
+          md = ds.metadata()
           assert md.id, "metadata id missing"
-          print("smoke ok")
+
+          archives = ds.archives()
+          assert isinstance(archives, list), "archives listing is not a list"
+          if archives:
+              months = [a.month for a in archives]
+              assert months == sorted(months, reverse=True), f"archives not newest-first: {months[:5]}"
+
+              with tempfile.TemporaryDirectory() as tmp:
+                  dest = pathlib.Path(tmp) / "latest.zip"
+                  ds.archive(str(dest), month="latest", format="geojson")
+                  assert dest.stat().st_size > 0, "latest archive downloaded empty"
+
+          print(f"smoke ok — {page.total} owned, {len(archives)} archives on {ds.slug}")
           PY

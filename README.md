@@ -1,8 +1,8 @@
 # topolab-sdk-spec
 
-Source of truth for the Topolab client SDKs (Python, TypeScript, R).
+Source of truth for the Topolab client SDKs (Python, TypeScript, R, Go).
 
-- `openapi.json` — committed snapshot of the public API (curated to the dataset + OGC surface the SDKs wrap).
+- `openapi.json` — committed snapshot of the public API (curated to the dataset, archive, OGC and SQL surface the SDKs wrap).
 - `conventions.yaml` — machine-readable canonical method/parameter/error surface every SDK must expose.
 - `conventions.md` — human-readable mirror of the surface.
 - `fixtures/` — golden HTTP responses shared by all SDK test suites.
@@ -20,5 +20,13 @@ for the design.
 | `topolab-python` | `topolab` (PyPI) |
 | `topolab-js` | `@topolab/sdk` (npm) |
 | `topolab-r` | `topolab` (CRAN) |
+| `topolab-go` | `github.com/topolab-bv/topolab-go` |
 
 Each SDK's CI checks this repo out side-by-side so its tests can read `../topolab-sdk-spec/fixtures` and `../topolab-sdk-spec/conventions.yaml`.
+
+## One host
+
+The whole surface is served by a single service: `api.topolab.nl` in production,
+`api-staging.topolab.nl` in staging. There is no separate host for the developer
+API — anything documenting `engine.topolab.nl` or `engine-staging.topolab.nl` is
+out of date.
