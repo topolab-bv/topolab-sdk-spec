@@ -1,0 +1,8 @@
+{
+  "path": "/v1/dataset/nl-domino-poi/archives/list",
+  "method": "GET",
+  "code": 403,
+  "message": "Archive access requires the Archived Data add-on. Please upgrade to access historical data.",
+  "time": "2026-09-08T23:42:15.819Z",
+  "requestId": "b480698d5f78bb68cbaa2e36f013edec"
+}

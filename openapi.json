@@ -1,109 +1,1357 @@
 {
   "openapi": "3.1.0",
-  "info": { "title": "Topolab API", "version": "1.0.0", "description": "Public dataset and OGC API - Features surface wrapped by the Topolab SDKs." },
+  "info": {
+    "title": "Topolab API",
+    "version": "1.1.0",
+    "description": "Public data-delivery API for Topolab. Organisations authenticate with an organisation-scoped API key and pull the datasets they licence: current files in five formats, monthly archives addressed by `latest` / `YYYY-MM` / `YYYY-MM-DD`, paginated coordinates, OGC API - Features, and (Enterprise) read-only SQL.\n\nA single service serves this whole surface: `api.topolab.nl` in production and `api-staging.topolab.nl` in staging.\n\nSend the key as `X-API-Key`. `Authorization: Bearer <key>` is accepted as a fallback on the same routes.\n\nCatalogue routes marked with no security requirement are anonymous — they describe datasets rather than deliver their contents."
+  },
   "servers": [
-    { "url": "https://api.topolab.nl", "description": "Production" },
-    { "url": "https://api-staging.topolab.nl", "description": "Staging" }
+    {
+      "url": "https://api.topolab.nl",
+      "description": "Production"
+    },
+    {
+      "url": "https://api-staging.topolab.nl",
+      "description": "Staging"
+    }
   ],
-  "security": [{ "ApiKey": [] }],
+  "security": [
+    {
+      "ApiKey": []
+    }
+  ],
   "components": {
-    "securitySchemes": { "ApiKey": { "type": "apiKey", "in": "header", "name": "X-API-Key" } },
+    "securitySchemes": {
+      "ApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      }
+    },
     "schemas": {
       "PageMeta": {
         "type": "object",
-        "required": ["currentPage","itemsPerPage","totalItems","totalPages","hasPreviousPage","hasNextPage"],
+        "required": [
+          "currentPage",
+          "itemsPerPage",
+          "totalItems",
+          "totalPages",
+          "hasPreviousPage",
+          "hasNextPage"
+        ],
         "properties": {
-          "currentPage": {"type":"integer"}, "itemsPerPage": {"type":"integer"},
-          "totalItems": {"type":"integer"}, "totalPages": {"type":"integer"},
-          "hasPreviousPage": {"type":"boolean"}, "hasNextPage": {"type":"boolean"}
+          "currentPage": {
+            "type": "integer"
+          },
+          "itemsPerPage": {
+            "type": "integer"
+          },
+          "totalItems": {
+            "type": "integer"
+          },
+          "totalPages": {
+            "type": "integer"
+          },
+          "hasPreviousPage": {
+            "type": "boolean"
+          },
+          "hasNextPage": {
+            "type": "boolean"
+          }
         }
       },
       "DatasetSummary": {
         "type": "object",
-        "required": ["id","table"],
+        "required": [
+          "id",
+          "table"
+        ],
         "properties": {
-          "id": {"type":"string","format":"uuid"},
-          "table": {"type":"string"},
-          "theme": {"type":"string"},
-          "country": {"type":"string"},
-          "metadata": {"type":"object","additionalProperties": true}
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "table": {
+            "type": "string"
+          },
+          "theme": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
         }
       },
       "DatasetList": {
-        "type":"object","required":["data","meta"],
-        "properties": { "data": {"type":"array","items":{"$ref":"#/components/schemas/DatasetSummary"}}, "meta": {"$ref":"#/components/schemas/PageMeta"} }
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DatasetSummary"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PageMeta"
+          }
+        }
       },
       "GeoJSONFeature": {
-        "type":"object","required":["type","geometry","properties"],
+        "type": "object",
+        "required": [
+          "type",
+          "geometry",
+          "properties"
+        ],
         "properties": {
-          "type": {"const":"Feature"},
-          "geometry": {"type":"object","additionalProperties": true},
-          "properties": {"type":"object","additionalProperties": true},
-          "id": {"type":["string","number"]}
+          "type": {
+            "const": "Feature"
+          },
+          "geometry": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "id": {
+            "type": [
+              "string",
+              "number"
+            ]
+          }
         }
       },
       "GeoJSONFeatureCollection": {
-        "type":"object","required":["type","features"],
+        "type": "object",
+        "required": [
+          "type",
+          "features"
+        ],
         "properties": {
-          "type": {"const":"FeatureCollection"},
-          "features": {"type":"array","items":{"$ref":"#/components/schemas/GeoJSONFeature"}},
-          "numberReturned": {"type":"integer"},
-          "numberMatched": {"type":"integer"}
+          "type": {
+            "const": "FeatureCollection"
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GeoJSONFeature"
+            }
+          },
+          "numberReturned": {
+            "type": "integer"
+          },
+          "numberMatched": {
+            "type": "integer"
+          }
         }
       },
       "ApiError": {
-        "type":"object","required":["statusCode","message"],
-        "properties": { "statusCode":{"type":"integer"}, "message":{"type":"string"}, "error":{"type":"string"}, "retryAfter":{"type":"integer"}, "details":{"type":"object","additionalProperties": true} }
+        "type": "object",
+        "description": "Error envelope produced by the engine's global exception filter. Note there is no `statusCode` field — the numeric status is `code`, and it always equals the HTTP status. Clients should branch on the HTTP status, not on the body.",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "Mirrors the HTTP status code."
+          },
+          "message": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          },
+          "time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "requestId": {
+            "type": "string",
+            "description": "Also returned as the X-Request-Id response header. Quote it in support requests."
+          }
+        }
+      },
+      "OwnedDataset": {
+        "type": "object",
+        "description": "A dataset the calling organisation holds an active licence for. Every entry is guaranteed downloadable — the listing is filtered by the same licence check the download routes enforce.",
+        "properties": {
+          "table": {
+            "type": "string",
+            "description": "Dataset slug; the identifier used in every other path and as the OGC collectionId."
+          },
+          "name": {
+            "type": "string"
+          },
+          "recordCount": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "latestArchiveMonth": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^\\d{4}-\\d{2}$",
+            "description": "Newest archive month inside this organisation's retention window, or null when none is in range."
+          },
+          "latestArchiveFormats": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "archiveMonthsAvailable": {
+            "type": "integer",
+            "description": "How many archive months are inside the retention window."
+          },
+          "links": {
+            "type": "object",
+            "description": "Absolute URLs, so an integration can walk from this listing to the data without building paths itself.",
+            "properties": {
+              "current": {
+                "type": "string",
+                "description": "Current-file download; contains a literal {format} placeholder."
+              },
+              "archives": {
+                "type": "string"
+              },
+              "latestArchive": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Contains a literal {format} placeholder; null when no archive is in range."
+              }
+            }
+          }
+        },
+        "required": [
+          "table",
+          "name",
+          "links"
+        ]
+      },
+      "OwnedDatasets": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OwnedDataset"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "description": "Total licensed datasets, not the size of this page."
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ]
+      },
+      "ArchiveEntry": {
+        "type": "object",
+        "description": "One monthly snapshot. Listed newest-first.",
+        "properties": {
+          "month": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}$"
+          },
+          "formats": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "archiveDate": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "month",
+          "formats"
+        ]
+      },
+      "CoordinateRow": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "location": {
+            "$ref": "#/components/schemas/GeoJSONGeometry"
+          },
+          "latitude": {
+            "type": "string"
+          },
+          "longitude": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Attribute bag. Advanced-tier fields (email, phone, website, hours, services) are present only for organisations entitled to high-value data for this dataset."
+          }
+        }
+      },
+      "GeoJSONGeometry": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "coordinates": {
+            "type": "array",
+            "items": {}
+          }
+        }
+      },
+      "SqlQueryRequest": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "minLength": 1,
+            "description": "A single read-only SELECT (or WITH). Multiple statements, DDL and DML are rejected before execution."
+          },
+          "maxRows": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000,
+            "default": 10000
+          }
+        },
+        "required": [
+          "sql"
+        ]
+      },
+      "SqlQueryResult": {
+        "type": "object",
+        "properties": {
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "rowCount": {
+            "type": "integer"
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "True when the result was cut off at the row cap."
+          },
+          "elapsedMs": {
+            "type": "number"
+          },
+          "datasets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Licensed tables the query actually read, as resolved from the query plan."
+          }
+        }
+      },
+      "OgcLink": {
+        "type": "object",
+        "properties": {
+          "rel": {
+            "type": "string"
+          },
+          "href": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "rel",
+          "href"
+        ]
+      },
+      "OgcCollection": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The dataset slug."
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "extent": {
+            "type": "object",
+            "properties": {
+              "spatial": {
+                "type": "object",
+                "properties": {
+                  "bbox": {
+                    "type": "array",
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OgcLink"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "links"
+        ]
+      },
+      "OgcCollections": {
+        "type": "object",
+        "properties": {
+          "links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OgcLink"
+            }
+          },
+          "collections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OgcCollection"
+            }
+          }
+        }
+      },
+      "OgcLandingPage": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OgcLink"
+            }
+          }
+        }
+      },
+      "ConformanceDeclaration": {
+        "type": "object",
+        "properties": {
+          "conformsTo": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "DatasetAssets": {
+        "type": "object",
+        "properties": {
+          "assets": {
+            "type": "object",
+            "properties": {
+              "mapUrl": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "thumbnailUrl": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "sampleCsvUrl": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "sampleJsonUrl": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "exports": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "mime": {
+                  "type": "string"
+                },
+                "size": {
+                  "type": "integer"
+                },
+                "variant": {
+                  "type": "string"
+                },
+                "downloadUrl": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
       }
     }
   },
   "paths": {
     "/v1/dataset/all": {
       "get": {
-        "operationId": "listDatasets", "security": [],
+        "operationId": "listDatasets",
+        "security": [],
         "parameters": [
-          {"name":"page","in":"query","schema":{"type":"integer"}},
-          {"name":"limit","in":"query","schema":{"type":"integer"}},
-          {"name":"search","in":"query","schema":{"type":"string"}},
-          {"name":"theme","in":"query","schema":{"type":"string"}},
-          {"name":"country","in":"query","schema":{"type":"string"}},
-          {"name":"sortBy","in":"query","schema":{"type":"string"}},
-          {"name":"sortOrder","in":"query","schema":{"type":"string","enum":["ASC","DESC"]}}
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "theme",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "country",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
+            }
+          }
         ],
-        "responses": {"200":{"description":"ok","content":{"application/json":{"schema":{"$ref":"#/components/schemas/DatasetList"}}}}}
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/dataset/owned": {
+      "get": {
+        "operationId": "listOwnedDatasets",
+        "summary": "List the datasets this organisation licences",
+        "description": "The entry point for a backend integration: page through everything the organisation owns and follow each entry's links to pull current files or archives. Requires an organisation-scoped key and the api-access add-on.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "a page of licensed datasets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnedDatasets"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "limit or offset is not a valid integer, or limit exceeds 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "missing, invalid or revoked API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "key is not organisation-scoped, or the api-access add-on is not active",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "rate limit or usage quota exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/v1/dataset/{table}": {
       "get": {
-        "operationId": "getDataset", "security": [],
+        "operationId": "getDataset",
+        "security": [],
         "parameters": [
-          {"name":"table","in":"path","required":true,"schema":{"type":"string"}},
-          {"name":"locale","in":"query","schema":{"type":"string","enum":["en","nl"]}}
+          {
+            "name": "table",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locale",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "en",
+                "nl"
+              ]
+            }
+          }
         ],
-        "responses": {"200":{"description":"ok","content":{"application/json":{"schema":{"$ref":"#/components/schemas/DatasetSummary"}}}},"404":{"description":"not found","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ApiError"}}}}}
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetSummary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
       }
     },
-    "/v1/dataset/{table}/sample/{format}": {
+    "/v1/dataset/{table}/archives/list": {
       "get": {
-        "operationId": "getDatasetSample", "security": [],
+        "operationId": "listDatasetArchives",
+        "summary": "List available monthly archives, newest first",
+        "description": "Filtered to the organisation's retention window: Team plans see a trailing 12 months, Enterprise and full-history add-ons see everything. Free — no credits are charged.",
         "parameters": [
-          {"name":"table","in":"path","required":true,"schema":{"type":"string"}},
-          {"name":"format","in":"path","required":true,"schema":{"type":"string","enum":["csv","json","geojson","kml"]}}
+          {
+            "name": "table",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
-        "responses": {"200":{"description":"ok"}}
+        "responses": {
+          "200": {
+            "description": "archives, newest first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ArchiveEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "missing, invalid or revoked API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "no active licence for this dataset, or the archived-data add-on is not active",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "dataset not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/dataset/{table}/archives/{month}/{format}": {
+      "get": {
+        "operationId": "downloadDatasetArchive",
+        "summary": "Download one monthly archive",
+        "description": "Addressable three ways, so an integration can pull the newest snapshot without listing first:\n- `latest` — newest archive inside the retention window\n- `YYYY-MM` — that month\n- `YYYY-MM-DD` — the month containing that date\n\nA malformed or impossible month is a 400. A well-formed month with no archive available is a 404. Out-of-retention-window and not-yet-started months both return 404 and are deliberately indistinguishable, so the response never reveals that an archive exists outside your plan.",
+        "parameters": [
+          {
+            "name": "table",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "month",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^(latest|\\d{4}-\\d{2}(-\\d{2})?)$"
+            },
+            "examples": {
+              "latest": {
+                "value": "latest"
+              },
+              "month": {
+                "value": "2026-07"
+              },
+              "date": {
+                "value": "2026-07-15"
+              }
+            }
+          },
+          {
+            "name": "format",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "csv",
+                "json",
+                "geojson",
+                "kml",
+                "shp"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "archive stream (zip, or gzip when the stored object is gzipped)",
+            "content": {
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/gzip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "unsupported format, or a month that is malformed or not a real calendar month/date",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "missing, invalid or revoked API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "insufficient credits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "no active licence, archived-data add-on inactive, or monthly spend limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "dataset not found, no archive for that month, outside the retention window, or the month has not started",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/dataset/{table}/coordinates": {
+      "get": {
+        "operationId": "getDatasetCoordinates",
+        "summary": "Paginated coordinates with attributes",
+        "description": "Omit both parameters to receive the whole dataset in one response, capped at 50000 rows. Pass either to page. X-Total-Count reports the full row count regardless of paging.",
+        "parameters": [
+          {
+            "name": "table",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50000
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "coordinate rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CoordinateRow"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Total-Count": {
+                "description": "Total rows in the dataset.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Returned-Count": {
+                "description": "Rows in this response.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Offset": {
+                "description": "Offset applied.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "limit or offset is not a valid integer, or limit exceeds 50000",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "missing, invalid or revoked API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "insufficient credits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "no active licence, api-access add-on inactive, or monthly spend limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/dataset/{table}/files": {
+      "get": {
+        "operationId": "getDatasetAssets",
+        "summary": "Public asset and export metadata for a dataset",
+        "description": "Returns asset URLs and export descriptors, not the files themselves. Each export's downloadUrl points at the authenticated download route.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "table",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "asset metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetAssets"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "dataset not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/v1/dataset/{table}/files/{format}": {
       "get": {
         "operationId": "downloadDatasetFile",
         "parameters": [
-          {"name":"table","in":"path","required":true,"schema":{"type":"string"}},
-          {"name":"format","in":"path","required":true,"schema":{"type":"string","enum":["csv","json","geojson","kml","shp"]}}
+          {
+            "name": "table",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "csv",
+                "json",
+                "geojson",
+                "kml",
+                "shp"
+              ]
+            }
+          }
         ],
         "responses": {
-          "200":{"description":"file stream","content":{"application/geo+json":{"schema":{"$ref":"#/components/schemas/GeoJSONFeatureCollection"}},"application/octet-stream":{"schema":{"type":"string","format":"binary"}}}},
-          "402":{"description":"insufficient credits","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ApiError"}}}},
-          "403":{"description":"addon required or access denied","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ApiError"}}}}
+          "200": {
+            "description": "file stream",
+            "content": {
+              "application/geo+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeoJSONFeatureCollection"
+                }
+              },
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "insufficient credits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "addon required or access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/dataset/{table}/sample/{format}": {
+      "get": {
+        "operationId": "getDatasetSample",
+        "security": [],
+        "parameters": [
+          {
+            "name": "table",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "json",
+                "csv",
+                "geojson",
+                "kml"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok"
+          }
+        }
+      }
+    },
+    "/v1/ogc": {
+      "get": {
+        "operationId": "getOgcLandingPage",
+        "summary": "OGC API - Features landing page",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "OGC API - Features landing page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OgcLandingPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ogc/api": {
+      "get": {
+        "operationId": "getOgcApiDefinition",
+        "summary": "OpenAPI definition of the OGC surface",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "OpenAPI 3.0 document scoped to /v1/ogc",
+            "content": {
+              "application/vnd.oai.openapi+json;version=3.0": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ogc/collections": {
+      "get": {
+        "operationId": "listOgcCollections",
+        "summary": "Collections this organisation may read",
+        "description": "One collection per licensed dataset. Requires the gis-access add-on and an organisation-scoped key.",
+        "responses": {
+          "200": {
+            "description": "collections",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OgcCollections"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "API key is not scoped to an organisation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "missing, invalid or revoked API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "gis-access add-on is not active",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ogc/collections/{collectionId}": {
+      "get": {
+        "operationId": "getOgcCollection",
+        "summary": "One collection",
+        "parameters": [
+          {
+            "name": "collectionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The dataset slug."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "collection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OgcCollection"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "API key is not scoped to an organisation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "missing, invalid or revoked API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "gis-access add-on is not active",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "collection not found, or not licensed to this organisation — the two are deliberately indistinguishable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -111,17 +1359,298 @@
       "get": {
         "operationId": "getOgcItems",
         "parameters": [
-          {"name":"collectionId","in":"path","required":true,"schema":{"type":"string"}},
-          {"name":"bbox","in":"query","schema":{"type":"string"},"description":"minLon,minLat,maxLon,maxLat"},
-          {"name":"limit","in":"query","schema":{"type":"integer","minimum":1,"maximum":1000,"default":100}},
-          {"name":"offset","in":"query","schema":{"type":"integer"}},
-          {"name":"category","in":"query","schema":{"type":"string"}},
-          {"name":"city","in":"query","schema":{"type":"string"}},
-          {"name":"country","in":"query","schema":{"type":"string"}}
+          {
+            "name": "collectionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "bbox",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "minLon,minLat,maxLon,maxLat"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "city",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "country",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
         "responses": {
-          "200":{"description":"feature collection","content":{"application/geo+json":{"schema":{"$ref":"#/components/schemas/GeoJSONFeatureCollection"}}}},
-          "403":{"description":"GIS_ACCESS required","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ApiError"}}}}
+          "200": {
+            "description": "feature collection",
+            "content": {
+              "application/geo+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeoJSONFeatureCollection"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "GIS_ACCESS required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "bbox is not four numbers, or the API key is not scoped to an organisation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "missing, invalid or revoked API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "collection not found, or not licensed to this organisation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Features in a collection",
+        "description": "Paginated GeoJSON. A non-numeric or non-positive limit falls back to 100 rather than erroring; limit is capped at 1000. Pagination links are returned in the Link header (RFC 8288)."
+      }
+    },
+    "/v1/ogc/collections/{collectionId}/items/{featureId}": {
+      "get": {
+        "operationId": "getOgcFeature",
+        "summary": "A single feature",
+        "parameters": [
+          {
+            "name": "collectionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "featureId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "feature",
+            "content": {
+              "application/geo+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeoJSONFeature"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "API key is not scoped to an organisation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "missing, invalid or revoked API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "insufficient credits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "gis-access add-on is not active",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "feature or collection not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ogc/conformance": {
+      "get": {
+        "operationId": "getOgcConformance",
+        "summary": "Conformance classes this API implements",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Conformance classes this API implements",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConformanceDeclaration"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sql/query": {
+      "post": {
+        "operationId": "runSqlQuery",
+        "summary": "Run a read-only SQL query (Enterprise)",
+        "description": "Executes one read-only SELECT against the datasets your organisation licences. Requires the sql-access entitlement, which is part of the Enterprise plan and is not sold on its own.\n\nThe query runs inside a read-only transaction with a statement timeout. Before execution the planner is consulted to determine which relations the query touches; every one must be a dataset your organisation holds an active licence for, so a query cannot reach data you have not bought, system catalogues, or set-returning functions.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SqlQueryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "query result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SqlQueryResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "SQL is empty, too long, not a single read-only SELECT, or could not be planned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "missing, invalid or revoked API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "insufficient credits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "sql-access not entitled, a referenced table is not licensed, or system tables were referenced",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "query exceeded the server time limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
         }
       }
     }

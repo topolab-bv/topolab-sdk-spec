@@ -1,0 +1,8 @@
+{
+    "path": "/v1/dataset/business_professional_services_autocrew/archives/2019-01/csv",
+    "method": "GET",
+    "code": 404,
+    "message": "Archive for 2019-01 is outside your plan's retention window.",
+    "time": "2026-09-09T00:08:03.085Z",
+    "requestId": "9772f8335a3389eff8008b770f1a29f8"
+}

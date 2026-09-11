@@ -1,1 +1,8 @@
-{"statusCode":403,"message":"This endpoint requires the API_ACCESS add-on","error":"Forbidden"}
+{
+  "path": "/v1/dataset/nl-domino-poi/files/geojson",
+  "method": "GET",
+  "code": 403,
+  "message": "This endpoint requires the api-access add-on",
+  "time": "2026-09-08T23:42:15.819Z",
+  "requestId": "25c2a6a19a5598c6e99c84dbbfa55f82"
+}

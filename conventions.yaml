@@ -31,6 +31,19 @@ methods:
     params: [bbox, limit, offset, category, city, country]
   - name: iter_items         # TS: iterItems ; R: tl_items_all
     params: [page_size, total_limit, bbox, category, city, country]
+  # --- Backend integration: pull what you own, on your own schedule ---
+  - name: datasets.owned     # TS: datasets.owned ; R: tl_datasets_owned ; Go: Datasets.Owned
+    params: [limit, offset]
+  - name: iter_owned         # TS: iterOwned ; R: tl_datasets_owned_all ; Go: IterOwned
+    params: [page_size, total_limit]
+  - name: archives           # R: tl_archives ; Go: Archives
+    params: []
+  - name: archive            # download one monthly archive; R: tl_archive ; Go: Archive
+    params: [path, month, format]
+  - name: coordinates        # R: tl_coordinates ; Go: Coordinates
+    params: [limit, offset]
+  - name: sql                # client-level, Enterprise only; R: tl_sql ; Go: SQL
+    params: [sql, max_rows]
 errors:
   - {name: TopolabError,             base: true}
   - {name: AuthenticationError,      status: 401}
@@ -40,6 +53,7 @@ errors:
   - {name: NotFoundError,            status: 404}
   - {name: ConfigurationError,       status: 400, when: "non-org key on OGC"}
   - {name: RateLimitError,           status: 429}
+  - {name: QueryTimeoutError,        status: 408, when: "SQL exceeded the server time limit"}
   - {name: ValidationError,          status: 4xx}
   - {name: ServerError,              status: 5xx}
   - {name: ConnectionError,          status: network}
