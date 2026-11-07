@@ -74,3 +74,11 @@ error_codes:
   MAX_ARRAY_LENGTH_EXCEEDED: {status: 400}
   MAX_KEYS_EXCEEDED: {status: 400}
   PROTOTYPE_POLLUTION_KEY: {status: 400}
+  RATE_LIMIT_EXCEEDED: {status: 429, details: [retryAfter, limit, remaining, resetAt], header: Retry-After}
+  USAGE_QUOTA_EXCEEDED: {status: 429, details: [quota, used]}
+# 429 wait, most specific first; none of them means exponential backoff.
+retry_after_sources: [Retry-After header, details.retryAfter, retryAfter]
+# Per-key rate limit (requests per minute) by plan, and its response headers.
+api_key_rate_limit:
+  per_minute: {free: 60, team: 300, enterprise: 1000}
+  headers: [X-RateLimit-Limit-ApiKey, X-RateLimit-Remaining-ApiKey, X-RateLimit-Reset-ApiKey]

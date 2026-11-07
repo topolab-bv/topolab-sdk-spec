@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.2.1]
+- **429s carry a code, details and `Retry-After`** (engine #650).
+  - `RATE_LIMIT_EXCEEDED` has `details.retryAfter` (seconds), `limit`,
+    `remaining` and `resetAt`, plus a `Retry-After` header.
+  - `USAGE_QUOTA_EXCEEDED` has `details.quota` and `used`, and no wait.
+  - `fixtures/nl-domino-poi/error-429.json` now has the real envelope instead of
+    the old `statusCode`/`retryAfter` shape. `error-429-quota.json` is new. Both
+    are written to the filter's output shape, not captured live.
+- SDKs read a 429's wait from the `Retry-After` header, then
+  `details.retryAfter`, then the older top-level `retryAfter`
+  (`retry_after_sources` in `conventions.yaml`).
+- New "Rate limits" section in `conventions.md`:
+  - the per-key limit by plan (60, 300 and 1,000 requests a minute for Free,
+    Team and Enterprise);
+  - the `X-RateLimit-Limit-ApiKey`, `X-RateLimit-Remaining-ApiKey` and
+    `X-RateLimit-Reset-ApiKey` headers, with Reset in seconds;
+  - the `X-Quota-*` headers.
+- `openapi.json`: `ApiError.details` lists the 429 keys, and the owned-datasets
+  429 documents `Retry-After`. Version 1.2.1.
+
 ## [1.2.0]
 - **`code` in the error envelope is now a string or a number.** Since engine
   PR #641 the engine keeps a named code it throws (upper-snake, such as
