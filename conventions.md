@@ -84,9 +84,85 @@ Every error shares one envelope, produced by the engine's global exception filte
   "time": "2026-09-08T23:42:15.819Z", "requestId": "25c2a6a1…" }
 ```
 
-**There is no `statusCode` field** — the numeric status is `code`, and it always
-equals the HTTP status. SDKs must branch on the **HTTP status**, never on a body
-field. `requestId` is also returned as the `X-Request-Id` header.
+```json
+{ "code": "SPENDING_LIMIT_EXCEEDED",
+  "message": "Organization monthly spending limit exceeded",
+  "details": { "limit": 5000, "consumed": 4995, "remaining": 5,
+               "periodEnd": "2026-11-30T23:59:59.999Z" },
+  "path": "/v1/dataset/{table}/files/geojson", "method": "GET",
+  "time": "2026-11-07T11:52:28.000Z", "requestId": "8f0c41d2…" }
+```
+
+- **There is no `statusCode` field.**
+- **`code` is a string or a number.** When the engine throws a named code it is
+  that string, always upper-snake (`^[A-Z][A-Z0-9_]{0,63}$`), such as
+  `SPENDING_LIMIT_EXCEEDED`. Otherwise it is the numeric HTTP status. `code`
+  therefore no longer always equals the HTTP status, and SDKs type it as
+  string-or-number.
+- **`details`** is present only for the codes and statuses listed below, and
+  carries only allow-listed, typed keys. Anything else the server knows stays
+  server-side.
+- `requestId` is also returned as the `X-Request-Id` header.
+
+SDKs choose the error class from the **HTTP status**, never from a body field, so
+the classes below are unchanged. `code` refines the meaning inside a class: a 403
+with `SPENDING_LIMIT_EXCEEDED` is still an `AccessDeniedError`.
+
+### Fields on every SDK error
+
+| Field | Python | TypeScript | R | Go |
+|---|---|---|---|---|
+| HTTP status (always a number) | `.status` (`.status_code` kept) | `.status` (`.statusCode` kept) | `$status` | `.StatusCode` |
+| Envelope `code` | `.code`: `str \| int \| None` | `.code`: `string \| number \| undefined` | `$code`: character or integer | `.Code`: `topolab.Code` |
+| `details` | `.details`: `dict \| None` | `.details`: `Record<string, unknown> \| undefined` | `$details`: list or `NULL` | `.Details`: `map[string]any` (nil when absent) |
+| Request id | `.request_id` | `.requestId` | `$request_id` | `.RequestID` |
+
+- `status` comes from the HTTP response. Callers that relied on `code` being the
+  status must read `status` instead.
+- When the body carries no usable `code` (for example a proxy's HTML error page),
+  `code` falls back to the HTTP status.
+- Errors raised before a response exists (network failures, client-side
+  validation) have no status, code or details.
+- Compare string codes by equality (`err.code == "SPENDING_LIMIT_EXCEEDED"`). Never
+  compare `code` with a number to learn the status.
+
+### Known string codes
+
+Codes the SDK surface (datasets, OGC, archives, coordinates, SQL) can return:
+
+| Status | Code | Meaning | `details` |
+|---|---|---|---|
+| 403 | `SPENDING_LIMIT_EXCEEDED` | A metered call (download, SQL) would pass the organization's monthly spending limit. Surfaces as `AccessDeniedError`. | `limit`, `consumed`, `remaining` (numbers), `periodEnd` (ISO 8601 timestamp) |
+| 400 | `SQL_DATA_ERROR` | The SQL query raised a data error while evaluating a value, such as a bad cast. The message names the SQLSTATE. | none |
+| 400 | `MAX_NODES_EXCEEDED`, `MAX_DEPTH_EXCEEDED`, `MAX_ARRAY_LENGTH_EXCEEDED`, `MAX_KEYS_EXCEEDED` | A JSON request body is larger or deeper than the server accepts. | none |
+| 400 | `PROTOTYPE_POLLUTION_KEY` | A JSON request body contains a forbidden key (`__proto__`, `constructor`, `prototype`). | none |
+
+Codes from other parts of the API, listed so a shared error handler recognises them:
+
+| Status | Code | Meaning | `details` |
+|---|---|---|---|
+| 403 | `HIGH_VALUE_DATA_REQUIRED` | Data Studio: a pipeline or generated file needs High-Value Data the organization does not hold. | `columns`, `datasetIds` (lists of identifiers) |
+| 410 | `REGENERATE_REQUIRED` | Data Studio: the file predates build tracking; run the pipeline again. | none |
+| 400 | `METADATA_NOT_READABLE` | Data Studio: a pipeline cannot read the metadata column; select named columns. | none |
+| 403 | `SSO_REQUIRED` | Sign-in: the organization enforces single sign-on, so no magic link is sent. | none |
+| 503 | `SSO_CHECK_UNAVAILABLE` | Sign-in: the single sign-on lookup failed; try again. | none |
+| 400 | `CONFIGURATION_VALIDATION_FAILED`, `UNSUPPORTED_ADDON_SUBTYPE`, `INVALID_TRIGGER_CODE`, `INVALID_DESTINATION_TARGET`, `DESTINATION_HAS_NO_SECRET` | Order add-on and delivery-destination configuration was rejected. | none |
+| 404 | `ORG_DESTINATION_NOT_FOUND` | The delivery destination does not exist. | none |
+
+Numeric codes that carry `details`:
+
+| `code` | Meaning | `details` |
+|---|---|---|
+| `402` | Not enough credits for the call (`InsufficientCreditsError`). | `required`, `available` |
+| `413` | A Data Studio upload exceeds the storage quota. | `quotaBytes`, `usageBytes`, `additionalBytes` |
+
+The chat API streams answers as Server-Sent Events and reports a failed turn as an
+`error` event, `{type: "error", code, message}`, not as an HTTP error envelope.
+Its codes are lower-snake. The AI metering refusals are `ai_busy` (another AI
+request for the organization is still running; try again shortly),
+`ai_interrupted` (the answer was interrupted and not charged; ask again) and
+`ai_cancelled` (the request was cancelled and not charged). The SDKs do not call
+the chat API.
 
 ### Recognising an add-on requirement
 

@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Topolab API",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "Public data-delivery API for Topolab. Organisations authenticate with an organisation-scoped API key and pull the datasets they licence: current files in five formats, monthly archives addressed by `latest` / `YYYY-MM` / `YYYY-MM-DD`, paginated coordinates, OGC API - Features, and (Enterprise) read-only SQL.\n\nA single service serves this whole surface: `api.topolab.nl` in production and `api-staging.topolab.nl` in staging.\n\nSend the key as `X-API-Key`. `Authorization: Bearer <key>` is accepted as a fallback on the same routes.\n\nCatalogue routes marked with no security requirement are anonymous — they describe datasets rather than deliver their contents."
   },
   "servers": [
@@ -157,18 +157,32 @@
       },
       "ApiError": {
         "type": "object",
-        "description": "Error envelope produced by the engine's global exception filter. Note there is no `statusCode` field — the numeric status is `code`, and it always equals the HTTP status. Clients should branch on the HTTP status, not on the body.",
+        "description": "Error envelope produced by the engine's global exception filter. There is no `statusCode` field. `code` is a string error code (such as `SPENDING_LIMIT_EXCEEDED`) when the error has one, and otherwise the numeric HTTP status. Read the HTTP status from the response, not from `code`. `details` appears only for the codes and statuses that carry allow-listed fields.",
         "required": [
           "code",
           "message"
         ],
         "properties": {
           "code": {
-            "type": "integer",
-            "description": "Mirrors the HTTP status code."
+            "oneOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Z][A-Z0-9_]{0,63}$"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "description": "A string error code such as `SPENDING_LIMIT_EXCEEDED` when the error has its own code; otherwise the numeric HTTP status.",
+            "example": "SPENDING_LIMIT_EXCEEDED"
           },
           "message": {
             "type": "string"
+          },
+          "details": {
+            "type": "object",
+            "description": "Allow-listed, typed fields for some errors: 402 `required`/`available`; 413 `quotaBytes`/`usageBytes`/`additionalBytes`; 403 `SPENDING_LIMIT_EXCEEDED` `limit`/`consumed`/`remaining`/`periodEnd`; 403 `HIGH_VALUE_DATA_REQUIRED` `columns`/`datasetIds`. Absent otherwise.",
+            "additionalProperties": true
           },
           "path": {
             "type": "string"

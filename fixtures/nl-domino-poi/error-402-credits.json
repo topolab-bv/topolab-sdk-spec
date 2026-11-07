@@ -1,1 +1,12 @@
-{"statusCode":402,"message":"Insufficient credits","error":"Payment Required","details":{"required":10,"available":0}}
+{
+  "path": "/v1/dataset/nl-domino-poi/files/geojson",
+  "method": "GET",
+  "code": 402,
+  "message": "Insufficient credits",
+  "details": {
+    "required": 10,
+    "available": 0
+  },
+  "time": "2026-11-07T11:52:28.000Z",
+  "requestId": "6a1b3c5d7e9f4a2b8c0d1e3f5a7b9c2d"
+}

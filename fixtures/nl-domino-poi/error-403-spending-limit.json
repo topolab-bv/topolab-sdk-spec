@@ -1,0 +1,14 @@
+{
+  "path": "/v1/dataset/nl-domino-poi/files/geojson",
+  "method": "GET",
+  "code": "SPENDING_LIMIT_EXCEEDED",
+  "message": "Organization monthly spending limit exceeded",
+  "details": {
+    "limit": 5000,
+    "consumed": 4995,
+    "remaining": 5,
+    "periodEnd": "2026-11-30T23:59:59.999Z"
+  },
+  "time": "2026-11-07T11:52:28.000Z",
+  "requestId": "8f0c41d2a7b94e6c9d1e3f5a7b9c0d2e"
+}

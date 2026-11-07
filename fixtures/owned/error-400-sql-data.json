@@ -1,0 +1,8 @@
+{
+  "path": "/v1/sql/query",
+  "method": "POST",
+  "code": "SQL_DATA_ERROR",
+  "message": "The query raised a data error (SQLSTATE 22P02) while evaluating a value.",
+  "time": "2026-11-07T11:52:28.000Z",
+  "requestId": "3c5e7a9b1d2f4a6c8e0b2d4f6a8c0e1f"
+}

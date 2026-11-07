@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.2.0]
+- **`code` in the error envelope is now a string or a number.** Since engine
+  PR #641 the engine keeps a named code it throws (upper-snake, such as
+  `SPENDING_LIMIT_EXCEEDED`) and otherwise sends the numeric HTTP status, so
+  `code` no longer always equals the status. `ApiError.code` in `openapi.json` is
+  `oneOf: [string, integer]`, and `conventions.md` lists the known string codes
+  and what they mean, plus the lower-snake codes the chat API sends on its
+  stream (`ai_busy`, `ai_interrupted`, `ai_cancelled`).
+- **`details` is documented.** It carries allow-listed, typed fields: 402
+  `required`/`available`, 413 `quotaBytes`/`usageBytes`/`additionalBytes`, 403
+  `SPENDING_LIMIT_EXCEEDED` `limit`/`consumed`/`remaining`/`periodEnd` and 403
+  `HIGH_VALUE_DATA_REQUIRED` `columns`/`datasetIds`. `ApiError` gains a
+  `details` property.
+- Every SDK error now exposes the HTTP status (`status`), the envelope `code`
+  (string-or-number) and `details`, with the idiomatic spelling per language in
+  `conventions.md` and `error_fields` in `conventions.yaml`. Error classes are
+  still chosen from the HTTP status.
+- Fixtures: `nl-domino-poi/error-403-spending-limit.json` (string code with
+  details) and `owned/error-400-sql-data.json` (string code without details),
+  both written to the shape the engine filter emits after #641. The 402 fixture
+  now has the real envelope shape (`code: 402` with `details`) instead of the
+  `statusCode`/`error` shape it was written in.
+
 ## [1.1.0]
 - Spec grew from 5 paths to 17, covering the surface an organization needs to
   pull the data it owns into its own systems:

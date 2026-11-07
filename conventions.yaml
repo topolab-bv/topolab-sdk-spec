@@ -57,3 +57,20 @@ errors:
   - {name: ValidationError,          status: 4xx}
   - {name: ServerError,              status: 5xx}
   - {name: ConnectionError,          status: network}
+# Fields every error built from an HTTP response exposes, spelled idiomatically
+# per SDK (see conventions.md, "Fields on every SDK error"). Classes above are
+# chosen from the HTTP status; `code` only refines the meaning inside a class.
+error_fields:
+  status: "HTTP status, always an integer (Python also status_code, TS also statusCode, Go StatusCode)"
+  code: "envelope code: an upper-snake string such as SPENDING_LIMIT_EXCEEDED, else the numeric HTTP status"
+  details: "allow-listed details object when the envelope carries one, else absent"
+  request_id: "X-Request-Id header, falling back to the envelope's requestId"
+# String codes the SDK surface can return (HTTP status they come with).
+error_codes:
+  SPENDING_LIMIT_EXCEEDED: {status: 403, details: [limit, consumed, remaining, periodEnd]}
+  SQL_DATA_ERROR: {status: 400}
+  MAX_NODES_EXCEEDED: {status: 400}
+  MAX_DEPTH_EXCEEDED: {status: 400}
+  MAX_ARRAY_LENGTH_EXCEEDED: {status: 400}
+  MAX_KEYS_EXCEEDED: {status: 400}
+  PROTOTYPE_POLLUTION_KEY: {status: 400}
