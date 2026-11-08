@@ -1,0 +1,12 @@
+{
+  "path": "/v1/dataset/nl-domino-poi/files/geojson",
+  "method": "GET",
+  "code": "USAGE_QUOTA_EXCEEDED",
+  "message": "API key usage quota exceeded",
+  "details": {
+    "quota": 10,
+    "used": 10
+  },
+  "time": "2026-11-07T12:00:18.000Z",
+  "requestId": "9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b"
+}

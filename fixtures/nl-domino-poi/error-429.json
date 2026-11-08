@@ -1,1 +1,14 @@
-{"statusCode":429,"message":"Rate limit exceeded","error":"Too Many Requests","retryAfter":2}
+{
+  "path": "/v1/dataset/nl-domino-poi/files/geojson",
+  "method": "GET",
+  "code": "RATE_LIMIT_EXCEEDED",
+  "message": "Rate limit exceeded",
+  "details": {
+    "retryAfter": 42,
+    "limit": 300,
+    "remaining": 0,
+    "resetAt": "2026-11-07T12:01:00.000Z"
+  },
+  "time": "2026-11-07T12:00:18.000Z",
+  "requestId": "4d6f8a0c2e1b3a5c7d9e0f1a2b3c4d5e"
+}

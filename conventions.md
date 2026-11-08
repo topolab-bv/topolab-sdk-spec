@@ -136,6 +136,8 @@ Codes the SDK surface (datasets, OGC, archives, coordinates, SQL) can return:
 | 400 | `SQL_DATA_ERROR` | The SQL query raised a data error while evaluating a value, such as a bad cast. The message names the SQLSTATE. | none |
 | 400 | `MAX_NODES_EXCEEDED`, `MAX_DEPTH_EXCEEDED`, `MAX_ARRAY_LENGTH_EXCEEDED`, `MAX_KEYS_EXCEEDED` | A JSON request body is larger or deeper than the server accepts. | none |
 | 400 | `PROTOTYPE_POLLUTION_KEY` | A JSON request body contains a forbidden key (`__proto__`, `constructor`, `prototype`). | none |
+| 429 | `RATE_LIMIT_EXCEEDED` | The API key passed its per-minute rate limit (see [Rate limits](#rate-limits)). The response also carries `Retry-After`. Surfaces as `RateLimitError`. | `retryAfter` (seconds), `limit`, `remaining` (numbers), `resetAt` (ISO 8601 timestamp) |
+| 429 | `USAGE_QUOTA_EXCEEDED` | The API key has used up its usage quota. Waiting does not help, so there is no `retryAfter` and no `Retry-After`. Surfaces as `RateLimitError`. | `quota`, `used` (numbers) |
 
 Codes from other parts of the API, listed so a shared error handler recognises them:
 
@@ -190,10 +192,57 @@ nothing.
 | 404 (metadata route) | `NotFoundError` | unknown slug on `GET /v1/dataset/:table` |
 | 400 (non-org key on OGC) | `ConfigurationError` | key not organization-scoped |
 | 408 | `QueryTimeoutError` | SQL exceeded the server statement timeout |
-| 429 | `RateLimitError` | carries `retry_after` (body, later header); auto-retried |
+| 429 | `RateLimitError` | carries `retry_after`: the `Retry-After` header, else `details.retryAfter`, else a top-level `retryAfter` from older engines; auto-retried |
 | other 4xx | `ValidationError` | bad params |
 | 5xx | `ServerError` | retried |
 | network | `ConnectionError` | transport failure |
+
+## Rate limits
+
+Each API key has its own per-minute request limit, set by the organization's
+plan:
+
+| Plan | Requests per minute, per key |
+|---|---|
+| Free | 60 |
+| Team | 300 |
+| Enterprise | 1,000 |
+
+Every response to an API-key request reports the key's window in these headers:
+
+| Header | Meaning |
+|---|---|
+| `X-RateLimit-Limit-ApiKey` | Requests allowed per minute for this key |
+| `X-RateLimit-Remaining-ApiKey` | Requests left in the current window |
+| `X-RateLimit-Reset-ApiKey` | Seconds until the window resets |
+
+A key with a usage quota also gets `X-Quota-Limit`, `X-Quota-Used` and
+`X-Quota-Remaining`. The unsuffixed `X-RateLimit-*` headers (and their
+`-short`, `-medium` and `-long` variants) belong to the service-wide throttler,
+not to the key.
+
+Passing the key's limit answers **429** with the `RATE_LIMIT_EXCEEDED` code and a
+`Retry-After` header (whole seconds, rounded up):
+
+```json
+{ "code": "RATE_LIMIT_EXCEEDED", "message": "Rate limit exceeded",
+  "details": { "retryAfter": 42, "limit": 300, "remaining": 0,
+               "resetAt": "2026-11-07T12:01:00.000Z" },
+  "path": "/v1/dataset/{table}/files/geojson", "method": "GET",
+  "time": "2026-11-07T12:00:18.000Z", "requestId": "4d6f8a0c…" }
+```
+
+Using up the key's usage quota answers **429** with `USAGE_QUOTA_EXCEEDED` and
+`details: {quota, used}`, and no wait, because waiting does not help.
+
+SDKs retry a 429 after the server's wait, read in this order:
+
+1. the `Retry-After` header (delay-seconds, or an HTTP date per RFC 9110);
+2. `details.retryAfter` (seconds);
+3. a top-level `retryAfter` (engines older than the `RATE_LIMIT_EXCEEDED` code).
+
+With none of these they fall back to exponential backoff. `RateLimitError`
+exposes the same value as its retry-after field.
 
 ## Pulling data you own
 
