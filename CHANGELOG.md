@@ -19,6 +19,13 @@
   - the `X-Quota-*` headers.
 - `openapi.json`: `ApiError.details` lists the 429 keys, and the owned-datasets
   429 documents `Retry-After`. Version 1.2.1.
+- **The chat API's stream error codes are upper-snake**, like the error
+  envelope's. Every code was renamed, with no lower-case alias: `PROVIDER_DOWN`,
+  `RATE_LIMITED`, `AUTH_REQUIRED`, `INTERNAL`, `NOT_ENTITLED`,
+  `CREDITS_EXHAUSTED`, `DAILY_LIMIT_REACHED`, `BUDGET_EXHAUSTED`,
+  `INVALID_REQUEST`, `AI_BUSY`, `AI_INTERRUPTED` and `AI_CANCELLED`.
+  `conventions.md` lists them and notes that Data Studio's HTTP errors send the
+  same five AI codes. The 1.2.0 entry below names the old lower-snake spellings.
 
 ## [1.2.0]
 - **`code` in the error envelope is now a string or a number.** Since engine

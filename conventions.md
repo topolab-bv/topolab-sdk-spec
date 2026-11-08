@@ -160,11 +160,16 @@ Numeric codes that carry `details`:
 
 The chat API streams answers as Server-Sent Events and reports a failed turn as an
 `error` event, `{type: "error", code, message}`, not as an HTTP error envelope.
-Its codes are lower-snake. The AI metering refusals are `ai_busy` (another AI
-request for the organization is still running; try again shortly),
-`ai_interrupted` (the answer was interrupted and not charged; ask again) and
-`ai_cancelled` (the request was cancelled and not charged). The SDKs do not call
-the chat API.
+Its codes are upper-snake, like the envelope's: `PROVIDER_DOWN`, `RATE_LIMITED`,
+`AUTH_REQUIRED`, `INTERNAL`, `NOT_ENTITLED`, `CREDITS_EXHAUSTED`,
+`DAILY_LIMIT_REACHED`, `BUDGET_EXHAUSTED`, `INVALID_REQUEST`, `AI_BUSY`,
+`AI_INTERRUPTED` and `AI_CANCELLED`. The AI metering refusals are `AI_BUSY`
+(another AI request for the organization is still running; try again shortly),
+`AI_INTERRUPTED` (the answer was interrupted and not charged; ask again) and
+`AI_CANCELLED` (the request was cancelled and not charged). Data Studio's HTTP
+errors send the same codes in the envelope: `CREDITS_EXHAUSTED` (402),
+`NOT_ENTITLED` (403), `AI_BUSY` (409), `AI_INTERRUPTED` (503) and `AI_CANCELLED`
+(499). The SDKs do not call the chat API.
 
 ### Recognising an add-on requirement
 
