@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Pull live spec from staging
         env:
-          ENGINE_URL: https://api-staging.topolab.nl
+          ENGINE_URL: https://api.topolab.dev
         run: ./scripts/sync-spec.sh
       - name: Fail if curated subset is missing endpoints present live
         run: |

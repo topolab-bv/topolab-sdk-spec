@@ -27,7 +27,7 @@ most-specific first:
 | Environment | Base URL |
 |---|---|
 | `production` (default) | `https://api.topolab.nl` |
-| `staging` | `https://api-staging.topolab.nl` |
+| `staging` | `https://api.topolab.dev` |
 
 ```python
 Client(api_key="…", environment="staging")          # Python

@@ -9,7 +9,7 @@ client:
   # Named API environments. Production ships as the default.
   environments:
     production: https://api.topolab.nl
-    staging: https://api-staging.topolab.nl
+    staging: https://api.topolab.dev
   # base_url resolution precedence (most specific first):
   base_url_precedence: [base_url, environment, TOPOLAB_BASE_URL, TOPOLAB_ENV, default_base_url]
 methods:

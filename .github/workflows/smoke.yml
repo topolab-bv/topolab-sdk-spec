@@ -16,7 +16,7 @@ jobs:
       - name: Exercise the integration path an organization actually uses
         env:
           TOPOLAB_API_KEY: ${{ secrets.STAGING_API_KEY }}
-          TOPOLAB_BASE_URL: https://api-staging.topolab.nl
+          TOPOLAB_BASE_URL: https://api.topolab.dev
         run: |
           python - <<'PY'
           import os, tempfile, pathlib

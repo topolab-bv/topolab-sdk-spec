@@ -2,7 +2,7 @@
 # Refresh openapi.live.json from a running engine, for diffing against the
 # curated openapi.json in this repo.
 #
-# Usage: ENGINE_URL=https://api-staging.topolab.nl ./scripts/sync-spec.sh
+# Usage: ENGINE_URL=https://api.topolab.dev ./scripts/sync-spec.sh
 set -euo pipefail
 
 ENGINE_URL="${ENGINE_URL:-http://localhost:1337}"
