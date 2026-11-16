@@ -137,10 +137,10 @@ Codes the SDK surface (datasets, OGC, archives, coordinates, SQL) can return:
 | 400 | `MAX_NODES_EXCEEDED`, `MAX_DEPTH_EXCEEDED`, `MAX_ARRAY_LENGTH_EXCEEDED`, `MAX_KEYS_EXCEEDED` | A JSON request body is larger or deeper than the server accepts. | none |
 | 400 | `PROTOTYPE_POLLUTION_KEY` | A JSON request body contains a forbidden key (`__proto__`, `constructor`, `prototype`). | none |
 | 429 | `RATE_LIMIT_EXCEEDED` | The API key passed its per-minute rate limit (see [Rate limits](#rate-limits)). The response also carries `Retry-After`. Surfaces as `RateLimitError`. | `retryAfter` (seconds), `limit`, `remaining` (numbers), `resetAt` (ISO 8601 timestamp) |
+| 429 | `USAGE_QUOTA_EXCEEDED` | The API key has used up its usage quota. Waiting does not help, so there is no `retryAfter` and no `Retry-After`. Surfaces as `RateLimitError`. | `quota`, `used` (numbers) |
 | 400 | `SQL_FUNCTION_NOT_ALLOWED` | The SQL query calls a function the proxy does not allow (`set_config`, `current_setting`, `pg_sleep` and its variants). Surfaces as `ValidationError`. | none |
 | 400 | `QUERY_TOO_EXPENSIVE` | The SQL query's estimated cost is above the server's limit, or it ran out of the memory or temporary disk a query may use. Surfaces as `ValidationError`. | none |
 | 503 | `BUSY` | All SQL query slots are in use. The top-level `reason` is `ORGANIZATION_LIMIT` (your organization already runs as many SQL queries at once as one organization may), `FLEET_LIMIT` (every slot on the platform is in use) or `SLOT_STORE_UNAVAILABLE` (the slots cannot be checked right now). The response carries `Retry-After`. Surfaces as `ServerError`. | `retryAfter` (seconds) |
-| 429 | `USAGE_QUOTA_EXCEEDED` | The API key has used up its usage quota. Waiting does not help, so there is no `retryAfter` and no `Retry-After`. Surfaces as `RateLimitError`. | `quota`, `used` (numbers) |
 
 Codes from other parts of the API, listed so a shared error handler recognises them:
 
