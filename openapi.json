@@ -3,7 +3,7 @@
   "info": {
     "title": "Topolab API",
     "version": "1.2.2",
-    "description": "Public data-delivery API for Topolab. Organisations authenticate with an organisation-scoped API key and pull the datasets they licence: current files in five formats, monthly archives addressed by `latest` / `YYYY-MM` / `YYYY-MM-DD`, paginated coordinates, OGC API - Features, and (Enterprise) read-only SQL.\n\nA single service serves this whole surface: `api.topolab.nl` in production and `api-staging.topolab.nl` in staging.\n\nSend the key as `X-API-Key`. `Authorization: Bearer <key>` is accepted as a fallback on the same routes.\n\nCatalogue routes marked with no security requirement are anonymous — they describe datasets rather than deliver their contents."
+    "description": "Public data-delivery API for Topolab. Organisations authenticate with an organisation-scoped API key and pull the datasets they licence: current files in five formats, monthly archives addressed by `latest` / `YYYY-MM` / `YYYY-MM-DD`, paginated coordinates, OGC API - Features, and (Enterprise) read-only SQL.\n\nA single service serves this whole surface: `api.topolab.nl` in production and `api.topolab.dev` in staging.\n\nSend the key as `X-API-Key`. `Authorization: Bearer <key>` is accepted as a fallback on the same routes.\n\nCatalogue routes marked with no security requirement are anonymous — they describe datasets rather than deliver their contents."
   },
   "servers": [
     {
@@ -11,7 +11,7 @@
       "description": "Production"
     },
     {
-      "url": "https://api-staging.topolab.nl",
+      "url": "https://api.topolab.dev",
       "description": "Staging"
     }
   ],

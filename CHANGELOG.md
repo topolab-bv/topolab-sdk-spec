@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+- The staging base URL is now `https://api.topolab.dev` (was
+  `https://api-staging.topolab.nl`): `conventions.yaml` / `conventions.md`
+  `environments.staging`, the `servers` entry and description in `openapi.json`,
+  and the freshness and smoke workflows. Production is unchanged.
+
 ## [1.2.2]
 - SQL proxy guard codes (engine database guards): `SQL_FUNCTION_NOT_ALLOWED` and
   `QUERY_TOO_EXPENSIVE` (400), `BUSY` (503, `details.retryAfter` and

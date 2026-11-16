@@ -27,6 +27,6 @@ Each SDK's CI checks this repo out side-by-side so its tests can read `../topola
 ## One host
 
 The whole surface is served by a single service: `api.topolab.nl` in production,
-`api-staging.topolab.nl` in staging. There is no separate host for the developer
-API — anything documenting `engine.topolab.nl` or `engine-staging.topolab.nl` is
-out of date.
+`api.topolab.dev` in staging. There is no separate host for the developer
+API — anything documenting `engine.topolab.nl`, `engine-staging.topolab.nl` or the
+former staging host `api-staging.topolab.nl` is out of date.
