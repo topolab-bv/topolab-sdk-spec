@@ -76,6 +76,9 @@ error_codes:
   PROTOTYPE_POLLUTION_KEY: {status: 400}
   RATE_LIMIT_EXCEEDED: {status: 429, details: [retryAfter, limit, remaining, resetAt], header: Retry-After}
   USAGE_QUOTA_EXCEEDED: {status: 429, details: [quota, used]}
+  SQL_FUNCTION_NOT_ALLOWED: {status: 400}
+  QUERY_TOO_EXPENSIVE: {status: 400}
+  BUSY: {status: 503, details: [retryAfter], header: Retry-After, reasons: [ORGANIZATION_LIMIT, FLEET_LIMIT, SLOT_STORE_UNAVAILABLE]}
 # 429 wait, most specific first; none of them means exponential backoff.
 retry_after_sources: [Retry-After header, details.retryAfter, retryAfter]
 # Per-key rate limit (requests per minute) by plan, and its response headers.

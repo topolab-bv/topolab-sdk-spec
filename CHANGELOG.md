@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.2]
+- SQL proxy guard codes (engine database guards): `SQL_FUNCTION_NOT_ALLOWED` and
+  `QUERY_TOO_EXPENSIVE` (400), `BUSY` (503, `details.retryAfter` and
+  `Retry-After`). SDKs handle them through their status classes; no SDK release.
+- `BUSY` carries a top-level `reason`: `ORGANIZATION_LIMIT`, `FLEET_LIMIT` or
+  `SLOT_STORE_UNAVAILABLE`. `openapi.json`: `ApiError` has an optional `reason`.
+- `openapi.json`: `/v1/sql/query` documents a 503 response. Version 1.2.2.
+- A 408 on SQL now means the statement timeout or the run's overall time budget.
+
 ## [1.2.1]
 - **429s carry a code, details and `Retry-After`** (engine #650).
   - `RATE_LIMIT_EXCEEDED` has `details.retryAfter` (seconds), `limit`,
