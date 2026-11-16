@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Topolab API",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "description": "Public data-delivery API for Topolab. Organisations authenticate with an organisation-scoped API key and pull the datasets they licence: current files in five formats, monthly archives addressed by `latest` / `YYYY-MM` / `YYYY-MM-DD`, paginated coordinates, OGC API - Features, and (Enterprise) read-only SQL.\n\nA single service serves this whole surface: `api.topolab.nl` in production and `api-staging.topolab.nl` in staging.\n\nSend the key as `X-API-Key`. `Authorization: Bearer <key>` is accepted as a fallback on the same routes.\n\nCatalogue routes marked with no security requirement are anonymous — they describe datasets rather than deliver their contents."
   },
   "servers": [
@@ -181,8 +181,12 @@
           },
           "details": {
             "type": "object",
-            "description": "Allow-listed, typed fields for some errors: 402 `required`/`available`; 413 `quotaBytes`/`usageBytes`/`additionalBytes`; 403 `SPENDING_LIMIT_EXCEEDED` `limit`/`consumed`/`remaining`/`periodEnd`; 403 `HIGH_VALUE_DATA_REQUIRED` `columns`/`datasetIds`; 429 `RATE_LIMIT_EXCEEDED` `retryAfter`/`limit`/`remaining`/`resetAt`; 429 `USAGE_QUOTA_EXCEEDED` `quota`/`used`. Absent otherwise.",
+            "description": "Allow-listed, typed fields for some errors: 402 `required`/`available`; 413 `quotaBytes`/`usageBytes`/`additionalBytes`; 403 `SPENDING_LIMIT_EXCEEDED` `limit`/`consumed`/`remaining`/`periodEnd`; 403 `HIGH_VALUE_DATA_REQUIRED` `columns`/`datasetIds`; 429 `RATE_LIMIT_EXCEEDED` `retryAfter`/`limit`/`remaining`/`resetAt`; 429 `USAGE_QUOTA_EXCEEDED` `quota`/`used`; 503 `BUSY` `retryAfter`. Absent otherwise.",
             "additionalProperties": true
+          },
+          "reason": {
+            "type": "string",
+            "description": "Sent only with 503 `BUSY`: `ORGANIZATION_LIMIT` (the organization already runs as many SQL queries at once as one organization may), `FLEET_LIMIT` (every SQL query slot on the platform is in use) or `SLOT_STORE_UNAVAILABLE` (the slots cannot be checked right now)."
           },
           "path": {
             "type": "string"
@@ -1664,7 +1668,17 @@
             }
           },
           "408": {
-            "description": "query exceeded the server time limit",
+            "description": "query exceeded the server time limit (the statement timeout or the run's overall time budget)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "All SQL query slots are in use (code `BUSY`, with `reason` and `Retry-After`), or SQL access is temporarily unavailable.",
             "content": {
               "application/json": {
                 "schema": {
