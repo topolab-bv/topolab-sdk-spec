@@ -85,3 +85,15 @@ retry_after_sources: [Retry-After header, details.retryAfter, retryAfter]
 api_key_rate_limit:
   per_minute: {free: 60, team: 300, enterprise: 1000}
   headers: [X-RateLimit-Limit-ApiKey, X-RateLimit-Remaining-ApiKey, X-RateLimit-Reset-ApiKey]
+# Row shape of the coordinates route: one flat JSON object per record. `first`
+# and `last` are the first and last keys of every row; `fixed` are the keys every
+# row carries (each SDK types them); the dataset's own columns sit between them
+# and vary per dataset and tier. `after_name` follow `location_name` directly
+# (they follow `id` when a dataset has no `location_name`). `removed` are the
+# keys of the earlier nested row, which no row carries.
+coordinate_row:
+  first: id
+  last: geometry
+  fixed: {id: string, latitude: number|null, longitude: number|null, geo_type: string|null, geometry: GeoJSON Point}
+  after_name: [latitude, longitude]
+  removed: [metadata, location, datasetId, dataset]

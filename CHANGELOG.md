@@ -1,6 +1,24 @@
 # Changelog
 
 ## [Unreleased]
+- **Breaking: coordinate rows are flat.** `GET /v1/dataset/{table}/coordinates`
+  returns each record as one flat row, the free sample's row for the caller's
+  tier plus `id`: `id` first, the dataset's columns in its column order,
+  `latitude` and `longitude` as numbers directly after `location_name`,
+  `geo_type` (the served geometry's type, `POINT` on this route) and a GeoJSON
+  Point `geometry` last. Empty values are `null` and lists are JSON arrays.
+  `metadata`, `location` and `datasetId` are gone, and `latitude`/`longitude` are
+  no longer decimal text. The SDKs change in the same release; release them only
+  once the route serves the flat row on staging.
+  - `openapi.json`: `CoordinateRow` is the flat row (fixed keys typed, other
+    columns through `additionalProperties`); the new `CoordinatePoint` replaces
+    `GeoJSONGeometry`, which nothing else used.
+  - `fixtures/owned/coordinates.json` holds the same two records as flat rows of
+    the standard tier, written by the engine's row builder rather than captured
+    live.
+  - `conventions.yaml`: new `coordinate_row` (first and last key, fixed keys,
+    position rule, removed keys). `conventions.md`: new "Coordinate rows"
+    section with each SDK's spelling and a table for moving from the nested row.
 - The staging base URL is now `https://api.topolab.dev` (was
   `https://api-staging.topolab.nl`): `conventions.yaml` / `conventions.md`
   `environments.staging`, the `servers` entry and description in `openapi.json`,

@@ -287,6 +287,59 @@ Team plans see a trailing 12 months of archives; Enterprise and full-history
 add-ons see everything. `archives()` already reflects your window, so it never
 lists a month that would 404.
 
+## Coordinate rows
+
+`GET /v1/dataset/{table}/coordinates` answers with a bare JSON array, ordered by
+`id`, and puts the paging facts in the `X-Total-Count`, `X-Returned-Count` and
+`X-Offset` headers. Each element is one record as a **flat row**:
+
+| Position | Key | Type |
+|---|---|---|
+| first | `id` | string (UUID) |
+| directly after `location_name` (after `id` when the dataset has no `location_name`) | `latitude`, `longitude` | number or null (WGS 84) |
+| between | the dataset's columns for your tier, in the dataset's column order | per column |
+| after the dataset's columns | `geo_type` | string or null; `POINT` on this route |
+| last | `geometry` | GeoJSON Point, `coordinates` in `[longitude, latitude]` order |
+
+- The row is the free sample's row (`/v1/dataset/{table}/sample/json`) for the
+  same tier and record, plus `id`. `GET /v1/dataset/{table}` describes the
+  columns in `columns` (name, label, type, tier).
+- An empty value is `null`, never `""`. A list (`tags`, `category_path`,
+  `services`) is a JSON array.
+- The advanced columns (such as `phone`, `email`, `website`, `hours` and
+  `services`) and their credit columns are present only when your organization
+  holds the High-Value Data add-on for the dataset. A credit column must be shown
+  wherever the values it credits are shown.
+- A column the dataset keeps private is absent.
+- The route serves each record's point, so a line or an area arrives as its
+  representative point. The files carry the full shapes.
+
+`conventions.yaml` (`coordinate_row`) holds the same rules in machine-readable
+form, and `fixtures/owned/coordinates.json` is a page of two rows.
+
+Every SDK types the fixed keys and keeps the dataset's columns as they arrive,
+in the order the API sent them:
+
+| | Python | TypeScript | R | Go |
+|---|---|---|---|---|
+| fixed keys | `row.id`, `row.latitude`, `row.longitude` (`float` or `None`), `row.geo_type`, `row.geometry` | `row.id`, `row.latitude`, `row.longitude` (`number` or `null`), `row.geo_type`, `row.geometry` | `row$id`, `row$latitude`, `row$longitude` (numeric or `NULL`), `row$geo_type`, `row$geometry` | `row.ID`, `row.Latitude`, `row.Longitude` (`*float64`), `row.GeoType`, `row.Geometry` |
+| a dataset column | `row.city`, `row.model_extra["city"]` | `row.city` (`unknown`) | `row$city` | `row.Columns["city"]` |
+| every key in order | `row.model_dump()` | `Object.keys(row)` | `names(row)` | `row.Keys`, `row.Value(key)` |
+
+### Moving from the nested row
+
+The earlier row nested its columns in a `metadata` object and sent `latitude`
+and `longitude` as decimal text. A client of that shape changes:
+
+| Nested row | Flat row |
+|---|---|
+| `row.metadata.city` | `row.city` |
+| `row.latitude == "51.49638600"` (text) | `row.latitude == 51.496386` (number) |
+| `row.location` (GeoJSON) | `row.geometry` (GeoJSON Point) |
+| `metadata.geo_type`, the stored type (such as `ST_Point`) | `geo_type`, the served type in upper case (`POINT`) |
+| `metadata.modules` | flat statistical code columns (`nuts3`, `municipality_code`, ...) |
+| `datasetId` | dropped (the slug you called is the dataset) |
+
 ## SQL access
 
 `tl.sql(...)` requires the `sql-access` entitlement, which is part of the
