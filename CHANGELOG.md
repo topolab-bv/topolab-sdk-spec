@@ -1,6 +1,30 @@
 # Changelog
 
 ## [Unreleased]
+- **The link route.** `openapi.json` adds `POST /v1/dataset/{table}/exports`
+  (`ExportLinkRequest`: `format`, `month`, `bundle` `zip` or `file`; 200
+  `ExportLinkReady` with a 10-minute signed `url`; 202 `ExportLinkPreparing`
+  with `retryAfterSeconds`; 503 `FILE_BUILD_FAILED`) and
+  `GET /v1/dataset/exports/{buildId}` (`ExportBuildStatus`).
+- The current-month file route sends `Deprecation` (RFC 9745) and
+  `Link: <…/exports>; rel="successor-version"` (RFC 8288), and answers 413
+  `FILE_TOO_LARGE` over 500 MB and 503 `FILE_PREPARING` or `FILE_BUILD_FAILED`
+  with `Retry-After`. The archive route answers a zip only (no gzip), named
+  `<table>_<YYYY-MM>.<format>.zip`, and the same 503s.
+- `ApiError.details` lists `retryAfter`/`linkRoute` for the two 503 codes and
+  `linkRoute` for `FILE_TOO_LARGE`; `conventions.md` and `conventions.yaml`
+  list the three codes.
+- New section "Downloading files" in `conventions.md` and a `downloads` block in
+  `conventions.yaml`: how `download()` and `archive()` use the link route, poll
+  while a file is prepared, fetch the signed link without the API key, and fall
+  back to the old routes on 404 or 405, decided on every call.
+- `DatasetSummary` gains `columnsOnRequest` (`name`, `label.en`, `label.nl`):
+  columns available on request, names only.
+- Tier words: the `CoordinateRow.metadata` description and the
+  `HIGH_VALUE_DATA_REQUIRED` row say "Advanced columns"; the code and the
+  `high-value-data` add-on slug keep their names.
+- The new paths are not live until the engine release that adds them; the
+  weekly freshness check lists them as missing until then.
 - The staging base URL is now `https://api.topolab.dev` (was
   `https://api-staging.topolab.nl`): `conventions.yaml` / `conventions.md`
   `environments.staging`, the `servers` entry and description in `openapi.json`,

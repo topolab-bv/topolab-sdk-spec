@@ -79,6 +79,23 @@ error_codes:
   SQL_FUNCTION_NOT_ALLOWED: {status: 400}
   QUERY_TOO_EXPENSIVE: {status: 400}
   BUSY: {status: 503, details: [retryAfter], header: Retry-After, reasons: [ORGANIZATION_LIMIT, FLEET_LIMIT, SLOT_STORE_UNAVAILABLE]}
+  FILE_PREPARING: {status: 503, details: [retryAfter, linkRoute], header: Retry-After}
+  FILE_BUILD_FAILED: {status: 503, details: [retryAfter, linkRoute], header: Retry-After}
+  FILE_TOO_LARGE: {status: 413, details: [linkRoute]}
+# download() and archive() through the link route (conventions.md,
+# "Downloading files").
+downloads:
+  link_route: POST /v1/dataset/{table}/exports
+  bodies:
+    download: {format: format, bundle: file}
+    archive: {format: format, month: month, bundle: zip}
+  signed_url_request: {sends_api_key: false, sends_accept: false}   # Accept: JavaScript
+  poll: {wait_from: [retryAfterSeconds, Retry-After header], default_seconds: 5, min_seconds: 1, max_wait_seconds: 1800, gives_up_with: FILE_PREPARING}
+  fallback_on_status: [404, 405]          # decided on every call, never remembered
+  fallback_routes:
+    download: GET /v1/dataset/{table}/files/{format}
+    archive: GET /v1/dataset/{table}/archives/{month}/{format}
+  never_fallback_on: [400, 401, 402, 403, 5xx]
 # 429 wait, most specific first; none of them means exponential backoff.
 retry_after_sources: [Retry-After header, details.retryAfter, retryAfter]
 # Per-key rate limit (requests per minute) by plan, and its response headers.

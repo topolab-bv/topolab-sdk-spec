@@ -83,6 +83,33 @@
           "metadata": {
             "type": "object",
             "additionalProperties": true
+          },
+          "columnsOnRequest": {
+            "type": "array",
+            "description": "Columns available on request: their names and labels only, never values. They are in no file; ask Topolab about them.",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "label"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "object",
+                  "properties": {
+                    "en": {
+                      "type": "string"
+                    },
+                    "nl": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       },
@@ -181,7 +208,7 @@
           },
           "details": {
             "type": "object",
-            "description": "Allow-listed, typed fields for some errors: 402 `required`/`available`; 413 `quotaBytes`/`usageBytes`/`additionalBytes`; 403 `SPENDING_LIMIT_EXCEEDED` `limit`/`consumed`/`remaining`/`periodEnd`; 403 `HIGH_VALUE_DATA_REQUIRED` `columns`/`datasetIds`; 429 `RATE_LIMIT_EXCEEDED` `retryAfter`/`limit`/`remaining`/`resetAt`; 429 `USAGE_QUOTA_EXCEEDED` `quota`/`used`; 503 `BUSY` `retryAfter`. Absent otherwise.",
+            "description": "Allow-listed, typed fields for some errors: 402 `required`/`available`; 413 `quotaBytes`/`usageBytes`/`additionalBytes`; 403 `SPENDING_LIMIT_EXCEEDED` `limit`/`consumed`/`remaining`/`periodEnd`; 403 `HIGH_VALUE_DATA_REQUIRED` `columns`/`datasetIds`; 429 `RATE_LIMIT_EXCEEDED` `retryAfter`/`limit`/`remaining`/`resetAt`; 429 `USAGE_QUOTA_EXCEEDED` `quota`/`used`; 503 `BUSY` `retryAfter`; 503 `FILE_PREPARING` and `FILE_BUILD_FAILED` `retryAfter`/`linkRoute`; 413 `FILE_TOO_LARGE` `linkRoute`. Absent otherwise.",
             "additionalProperties": true
           },
           "reason": {
@@ -336,7 +363,7 @@
           "metadata": {
             "type": "object",
             "additionalProperties": true,
-            "description": "Attribute bag. Advanced-tier fields (email, phone, website, hours, services) are present only for organisations entitled to high-value data for this dataset."
+            "description": "Attribute bag. Columns marked Advanced on the dataset page are present only for organisations with Advanced columns for that dataset (the Team and Enterprise plans)."
           }
         }
       },
@@ -570,6 +597,139 @@
                 }
               }
             }
+          }
+        }
+      },
+      "ExportLinkRequest": {
+        "type": "object",
+        "required": [
+          "format"
+        ],
+        "properties": {
+          "format": {
+            "type": "string",
+            "enum": [
+              "csv",
+              "json",
+              "geojson",
+              "kml",
+              "shp"
+            ]
+          },
+          "month": {
+            "type": "string",
+            "pattern": "^(latest|\\d{4}-\\d{2}(-\\d{2})?)$",
+            "description": "Omitted, or the current month: the current month's file. Any other month: that month, addressed as on the archive route (`latest`, `YYYY-MM`, `YYYY-MM-DD`), with the archive route's add-on, retention window (404 outside it) and price."
+          },
+          "bundle": {
+            "type": "string",
+            "enum": [
+              "zip",
+              "file"
+            ],
+            "description": "`file`: the data file as it is. `zip`: the zip with the data file (`<table>_<YYYY-MM>.<format>`), `README.txt`, `LEESMIJ.txt`, `columns.json` and `notices/`. The SDKs send `file` from `download()` and `zip` from `archive()`."
+          }
+        }
+      },
+      "ExportLinkReady": {
+        "type": "object",
+        "required": [
+          "state",
+          "url",
+          "expiresAt"
+        ],
+        "properties": {
+          "state": {
+            "type": "string",
+            "const": "ready"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Signed link, valid for 10 minutes. Fetch it without the API key: it carries its own authorisation."
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "tier": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "advanced"
+            ],
+            "description": "The column tier of the file: `standard` (in every licence) or `advanced` (Team and Enterprise)."
+          },
+          "month": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}$"
+          },
+          "build": {
+            "type": "string",
+            "description": "Build id."
+          }
+        }
+      },
+      "ExportLinkPreparing": {
+        "type": "object",
+        "required": [
+          "state",
+          "build",
+          "retryAfterSeconds"
+        ],
+        "properties": {
+          "state": {
+            "type": "string",
+            "const": "preparing"
+          },
+          "build": {
+            "type": "string",
+            "description": "Build id."
+          },
+          "retryAfterSeconds": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Ask the link route again after this many seconds."
+          },
+          "statusUrl": {
+            "type": "string",
+            "description": "`/v1/dataset/exports/{buildId}`."
+          }
+        }
+      },
+      "ExportBuildStatus": {
+        "type": "object",
+        "required": [
+          "state"
+        ],
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "preparing",
+              "ready",
+              "failed"
+            ]
+          },
+          "progress": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "How far the build is, when known."
+          },
+          "estimateSeconds": {
+            "type": "integer",
+            "minimum": 0
           }
         }
       }
@@ -902,18 +1062,20 @@
         ],
         "responses": {
           "200": {
-            "description": "archive stream (zip, or gzip when the stored object is gzipped)",
+            "description": "the month's zip, named `<table>_<YYYY-MM>.<format>.zip`; its data entry is `<table>_<YYYY-MM>.<format>`",
             "content": {
               "application/zip": {
                 "schema": {
                   "type": "string",
                   "format": "binary"
                 }
-              },
-              "application/gzip": {
+              }
+            },
+            "headers": {
+              "Content-Disposition": {
+                "description": "`attachment; filename=\"<table>_<YYYY-MM>.<format>.zip\"`",
                 "schema": {
-                  "type": "string",
-                  "format": "binary"
+                  "type": "string"
                 }
               }
             }
@@ -967,8 +1129,213 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "`FILE_PREPARING` (being built) or `FILE_BUILD_FAILED`; retry after `Retry-After`",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before asking again (RFC 9110, section 10.2.3).",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
         }
+      }
+    },
+    "/v1/dataset/{table}/exports": {
+      "post": {
+        "operationId": "createDatasetExportLink",
+        "summary": "Get a signed link to a dataset file",
+        "description": "Answers a 10-minute signed link to the file (200), or asks the client to wait while the file is prepared (202). Fetch the link without the API key.\n\nWithout `month`, or with the current month: the current month's file, with the files route's guards and price. Any other month: the archive route's guards (`archived-data` add-on, the retention window, 404 outside it) and its price by plan. One charge per organisation, build and format per 10 minutes: a repeat inside that window returns a fresh link without charging, and a 202 never charges.\n\nA server without this route answers 404 (or 405). The SDKs then use the old route on that call (`GET /v1/dataset/{table}/files/{format}` or `GET /v1/dataset/{table}/archives/{month}/{format}`), and never on a 402, 403 or 5xx.",
+        "parameters": [
+          {
+            "name": "table",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportLinkRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ready: a signed link",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportLinkReady"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "preparing: ask again after `retryAfterSeconds`",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before asking again (RFC 9110, section 10.2.3).",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportLinkPreparing"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "unsupported format or bundle, or a malformed month",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "missing, invalid or revoked API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "insufficient credits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "no active licence, add-on inactive, or monthly spend limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "dataset not found, or a month outside the retention window",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "`FILE_BUILD_FAILED`: the file could not be built",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before asking again (RFC 9110, section 10.2.3).",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/dataset/exports/{buildId}": {
+      "get": {
+        "operationId": "getDatasetExportStatus",
+        "summary": "Progress of a file being prepared",
+        "description": "For a build the caller's organisation issued or waits on. Ask the link route again for the signed link once it is ready.",
+        "parameters": [
+          {
+            "name": "buildId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "build state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportBuildStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "missing, invalid or revoked API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "no such build for this organisation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ]
       }
     },
     "/v1/dataset/{table}/coordinates": {
@@ -1152,7 +1519,7 @@
         ],
         "responses": {
           "200": {
-            "description": "file stream",
+            "description": "the file, streamed",
             "content": {
               "application/geo+json": {
                 "schema": {
@@ -1163,6 +1530,20 @@
                 "schema": {
                   "type": "string",
                   "format": "binary"
+                }
+              }
+            },
+            "headers": {
+              "Deprecation": {
+                "description": "This route is superseded by the link route (RFC 9745).",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Link": {
+                "description": "`</v1/dataset/{table}/exports>; rel=\"successor-version\"` (RFC 8288), with the `rel=\"describedby\"` link to the file's `columns.json` and the `rel=\"license\"` links to its notices.",
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -1186,8 +1567,38 @@
                 }
               }
             }
+          },
+          "413": {
+            "description": "`FILE_TOO_LARGE`: use the link route (`details.linkRoute`)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "`FILE_PREPARING` (being built) or `FILE_BUILD_FAILED`; retry after `Retry-After`",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before asking again (RFC 9110, section 10.2.3).",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "description": "The current month's file, streamed. Superseded by the link route (`POST /v1/dataset/{table}/exports`), which every response names in `Link` with `rel=\"successor-version\"`; this route keeps answering. Files over 500 MB answer 413 `FILE_TOO_LARGE`: use the link route."
       }
     },
     "/v1/dataset/{table}/sample/{format}": {
