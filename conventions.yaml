@@ -89,7 +89,7 @@ downloads:
   bodies:
     download: {format: format, bundle: file}
     archive: {format: format, month: month, bundle: zip}
-  signed_url_request: {sends_api_key: false, sends_accept: false}   # Accept: JavaScript
+  signed_url_request: {sends_api_key: false, sends_accept: false, query_in_logs_or_errors: false}   # Accept: JavaScript
   poll: {wait_from: [retryAfterSeconds, Retry-After header], default_seconds: 5, min_seconds: 1, max_wait_seconds: 1800, gives_up_with: FILE_PREPARING}
   fallback_on_status: [404, 405]          # decided on every call, never remembered
   fallback_routes:

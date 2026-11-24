@@ -363,7 +363,7 @@
           "metadata": {
             "type": "object",
             "additionalProperties": true,
-            "description": "Attribute bag. Columns marked Advanced on the dataset page are present only for organisations with Advanced columns for that dataset (the Team and Enterprise plans)."
+            "description": "Attribute bag. Columns marked Advanced on the dataset page are present only for organisations with Advanced columns for that dataset."
           }
         }
       },
@@ -669,7 +669,7 @@
               "standard",
               "advanced"
             ],
-            "description": "The column tier of the file: `standard` (in every licence) or `advanced` (Team and Enterprise)."
+            "description": "The column tier of the file: `standard` (the dataset's Standard columns) or `advanced` (its Standard and Advanced columns)."
           },
           "month": {
             "type": "string",

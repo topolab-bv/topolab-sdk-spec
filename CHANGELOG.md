@@ -22,7 +22,11 @@
   columns available on request, names only.
 - Tier words: the `CoordinateRow.metadata` description and the
   `HIGH_VALUE_DATA_REQUIRED` row say "Advanced columns"; the code and the
-  `high-value-data` add-on slug keep their names.
+  `high-value-data` add-on slug keep their names. No tier text names a plan:
+  `ExportLinkReady.tier` reads `standard` (the dataset's Standard columns) or
+  `advanced` (its Standard and Advanced columns).
+- "Downloading files": the signed link's query never goes into a log line or an
+  error (`signed_url_request.query_in_logs_or_errors: false`).
 - The new paths are not live until the engine release that adds them; the
   weekly freshness check lists them as missing until then.
 - The staging base URL is now `https://api.topolab.dev` (was

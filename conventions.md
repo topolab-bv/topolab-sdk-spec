@@ -319,6 +319,11 @@ lists a month that would 404.
 - An error from the signed link is raised with the class of its status and a
   message of the SDK's own; the storage host's body is not repeated, since it
   can quote the link's signature.
+- The link's query is its signature: a working link to the file for 10
+  minutes. It never goes into a log line or an error. A refused connection or a
+  timeout on the signed link names the scheme, host and path only, and the
+  SDK's own request logging (httpx's request line in Python) leaves the query
+  out while the request still sends it.
 
 `sample()` and `to_geojson()` keep their routes.
 
