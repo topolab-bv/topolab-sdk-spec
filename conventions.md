@@ -304,6 +304,15 @@ lists a month that would 404.
   client or request that sends **no API key** (and, in JavaScript, no
   `Accept`): the link carries its own authorisation, and the key must never
   reach the storage host. Send the link's query string unchanged.
+- **The documents.** A 200 also names the build's documents in `documents`:
+  a signed link to its `columns.json` (`documents.columns`, or null) and one
+  per notice file (`documents.notices`, each `{name, url}`). `download()`
+  writes them beside the file, fetched the same way as the file (no API key):
+  `columns.json` as `<file>.columns.json`, and each notice as
+  `<file>.notices/<name>`. A notice whose name is not a plain file name
+  (`^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$`) is skipped. A document that cannot be
+  fetched fails the call: the notices carry the licences and attributions the
+  data needs. `archive()` writes the zip only: it holds the documents itself.
 - **202** means the file is being prepared. Wait `retryAfterSeconds` (the
   `Retry-After` header when the body has none; 5 seconds when neither is set;
   at least 1 second) and post again. Waiting costs no credits. Stop after 30

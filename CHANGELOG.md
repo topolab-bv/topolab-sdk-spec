@@ -1,6 +1,15 @@
 # Changelog
 
 ## [Unreleased]
+- **The link route's documents.** `ExportLinkReady.documents` names signed
+  links to the build's `columns.json` and each notice file
+  (`{columns, notices: [{name, url}]}`). `download()` writes them beside the
+  file as `<file>.columns.json` and `<file>.notices/<name>`, fetched without the
+  API key; a document that cannot be fetched fails the call. `archive()` writes
+  the zip only, which holds them. `conventions.md` ("Downloading files") and the
+  `downloads.documents` block of `conventions.yaml` say so.
+- `ExportBuildStatus.state` adds `superseded`: a change of the dataset's
+  columns ended the build; ask the link route again.
 - **The link route.** `openapi.json` adds `POST /v1/dataset/{table}/exports`
   (`ExportLinkRequest`: `format`, `month`, `bundle` `zip` or `file`; 200
   `ExportLinkReady` with a 10-minute signed `url`; 202 `ExportLinkPreparing`

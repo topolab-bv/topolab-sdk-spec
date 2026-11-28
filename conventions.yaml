@@ -96,6 +96,14 @@ downloads:
     download: GET /v1/dataset/{table}/files/{format}
     archive: GET /v1/dataset/{table}/archives/{month}/{format}
   never_fallback_on: [400, 401, 402, 403, 5xx]
+  # The 200's documents (signed, fetched without the API key) beside a plain file; a zip holds them itself.
+  documents:
+    beside: download                       # archive() writes the zip only
+    columns: "{file}.columns.json"
+    notices: "{file}.notices/{name}"
+    notice_name: "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"   # any other name is skipped
+    on_fetch_error: fail_call
+  build_states: [preparing, ready, failed, superseded]   # GET /v1/dataset/exports/{buildId}; superseded: ask the link route again
 # 429 wait, most specific first; none of them means exponential backoff.
 retry_after_sources: [Retry-After header, details.retryAfter, retryAfter]
 # Per-key rate limit (requests per minute) by plan, and its response headers.

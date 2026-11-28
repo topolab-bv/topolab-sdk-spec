@@ -678,6 +678,46 @@
           "build": {
             "type": "string",
             "description": "Build id."
+          },
+          "documents": {
+            "type": "object",
+            "description": "Signed links (10 minutes, fetched without the API key, as `url`) to the build's documents: its `columns.json` (the columns the file holds, with their tier) and each notice file (licences and attributions the file's data needs). A zip (`bundle: zip`) holds the same documents itself.",
+            "required": [
+              "columns",
+              "notices"
+            ],
+            "properties": {
+              "columns": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uri",
+                "description": "Signed link to the build's `columns.json`; null when the build has none."
+              },
+              "notices": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "url"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+                      "description": "The notice's file name."
+                    },
+                    "url": {
+                      "type": "string",
+                      "format": "uri",
+                      "description": "Signed link to the notice."
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       },
@@ -719,8 +759,10 @@
             "enum": [
               "preparing",
               "ready",
-              "failed"
-            ]
+              "failed",
+              "superseded"
+            ],
+            "description": "`superseded`: a change of the dataset's columns ended this build; ask the link route again, which answers with today's build."
           },
           "progress": {
             "type": "object",
