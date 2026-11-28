@@ -138,6 +138,9 @@ Codes the SDK surface (datasets, OGC, archives, coordinates, SQL) can return:
 | 400 | `PROTOTYPE_POLLUTION_KEY` | A JSON request body contains a forbidden key (`__proto__`, `constructor`, `prototype`). | none |
 | 429 | `RATE_LIMIT_EXCEEDED` | The API key passed its per-minute rate limit (see [Rate limits](#rate-limits)). The response also carries `Retry-After`. Surfaces as `RateLimitError`. | `retryAfter` (seconds), `limit`, `remaining` (numbers), `resetAt` (ISO 8601 timestamp) |
 | 429 | `USAGE_QUOTA_EXCEEDED` | The API key has used up its usage quota. Waiting does not help, so there is no `retryAfter` and no `Retry-After`. Surfaces as `RateLimitError`. | `quota`, `used` (numbers) |
+| 503 | `FILE_PREPARING` | The file is being built. The old download routes send it with `Retry-After` (at most 20 seconds) and the SDKs retry it like any 503. The SDKs also raise it themselves, with status 202, when the link route still answers "preparing" after their 30-minute wait (see [Downloading files](#downloading-files)). Surfaces as `ServerError`. | `retryAfter` (seconds), `linkRoute` (path); from an SDK's own wait: `retryAfter`, `build` |
+| 503 | `FILE_BUILD_FAILED` | The file could not be built. Sent with `Retry-After`; retried like any 503, then raised. Surfaces as `ServerError`. | `retryAfter`, `linkRoute` |
+| 413 | `FILE_TOO_LARGE` | The file is over the old current-month route's 500 MB limit; the link route serves it. Surfaces as `ValidationError`. | `linkRoute` (path) |
 | 400 | `SQL_FUNCTION_NOT_ALLOWED` | The SQL query calls a function the proxy does not allow (`set_config`, `current_setting`, `pg_sleep` and its variants). Surfaces as `ValidationError`. | none |
 | 400 | `QUERY_TOO_EXPENSIVE` | The SQL query's estimated cost is above the server's limit, or it ran out of the memory or temporary disk a query may use. Surfaces as `ValidationError`. | none |
 | 503 | `BUSY` | All SQL query slots are in use. The top-level `reason` is `ORGANIZATION_LIMIT` (your organization already runs as many SQL queries at once as one organization may), `FLEET_LIMIT` (every slot on the platform is in use) or `SLOT_STORE_UNAVAILABLE` (the slots cannot be checked right now). The response carries `Retry-After`. Surfaces as `ServerError`. | `retryAfter` (seconds) |
@@ -146,7 +149,7 @@ Codes from other parts of the API, listed so a shared error handler recognises t
 
 | Status | Code | Meaning | `details` |
 |---|---|---|---|
-| 403 | `HIGH_VALUE_DATA_REQUIRED` | Data Studio: a pipeline or generated file needs High-Value Data the organization does not hold. | `columns`, `datasetIds` (lists of identifiers) |
+| 403 | `HIGH_VALUE_DATA_REQUIRED` | Data Studio: a pipeline or generated file needs Advanced columns the organization does not hold. The code keeps its name. | `columns`, `datasetIds` (lists of identifiers) |
 | 410 | `REGENERATE_REQUIRED` | Data Studio: the file predates build tracking; run the pipeline again. | none |
 | 400 | `METADATA_NOT_READABLE` | Data Studio: a pipeline cannot read the metadata column; select named columns. | none |
 | 403 | `SSO_REQUIRED` | Sign-in: the organization enforces single sign-on, so no magic link is sent. | none |
@@ -286,6 +289,52 @@ indistinguishable so the response never reveals an archive you cannot access.
 Team plans see a trailing 12 months of archives; Enterprise and full-history
 add-ons see everything. `archives()` already reflects your window, so it never
 lists a month that would 404.
+
+### Downloading files
+
+`download()` and `archive()` fetch files through the link route,
+`POST /v1/dataset/{table}/exports`:
+
+| Call | Body |
+|---|---|
+| `download(path, format)` | `{"format": …, "bundle": "file"}`: the current month's file as it is |
+| `archive(path, month, format)` | `{"format": …, "month": …, "bundle": "zip"}`: that month's zip |
+
+- **200** names a signed link (`url`), valid for 10 minutes. Fetch it with a
+  client or request that sends **no API key** (and, in JavaScript, no
+  `Accept`): the link carries its own authorisation, and the key must never
+  reach the storage host. Send the link's query string unchanged.
+- **The documents.** A 200 also names the build's documents in `documents`:
+  a signed link to its `columns.json` (`documents.columns`, or null) and one
+  per notice file (`documents.notices`, each `{name, url}`). `download()`
+  writes them beside the file, fetched the same way as the file (no API key):
+  `columns.json` as `<file>.columns.json`, and each notice as
+  `<file>.notices/<name>`. A notice whose name is not a plain file name
+  (`^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$`) is skipped. A document that cannot be
+  fetched fails the call: the notices carry the licences and attributions the
+  data needs. `archive()` writes the zip only: it holds the documents itself.
+- **202** means the file is being prepared. Wait `retryAfterSeconds` (the
+  `Retry-After` header when the body has none; 5 seconds when neither is set;
+  at least 1 second) and post again. Waiting costs no credits. Stop after 30
+  minutes with `FILE_PREPARING` and the build id in `details.build`; the build
+  keeps going on the server.
+- **404 or 405** means the server has no link route (every server before the
+  route ships, and again after a rollback). Make the old call instead, on this
+  call only: `GET /v1/dataset/{table}/files/{format}` for `download()`,
+  `GET /v1/dataset/{table}/archives/{month}/{format}` for `archive()`, with
+  today's behaviour and retries. Never remember the outcome between calls.
+- **Every other error** is raised as usual, never a fallback: 402, 403, 5xx
+  (including `FILE_BUILD_FAILED`) and 400.
+- An error from the signed link is raised with the class of its status and a
+  message of the SDK's own; the storage host's body is not repeated, since it
+  can quote the link's signature.
+- The link's query is its signature: a working link to the file for 10
+  minutes. It never goes into a log line or an error. A refused connection or a
+  timeout on the signed link names the scheme, host and path only, and the
+  SDK's own request logging (httpx's request line in Python) leaves the query
+  out while the request still sends it.
+
+`sample()` and `to_geojson()` keep their routes.
 
 ## SQL access
 
